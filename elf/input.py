@@ -1,0 +1,90 @@
+import httpx
+
+from .config import get_cache_input_file
+from .constants import AOC_BASE_URL, USER_AGENT
+from .exceptions import InputFetchError, MissingSessionTokenError
+
+
+def get_input(year: int, day: int, session: str | None) -> str:
+    """
+    Fetch the Advent of Code puzzle input for a specific year and day.
+
+    Args:
+        year: The year of the Advent of Code challenge.
+        day: The day of the Advent of Code challenge.
+        session: Your Advent of Code session token.
+
+    Returns:
+        The puzzle input for the specified day.
+
+    Raises:
+        MissingSessionTokenError: If no session token was provided.
+        InputFetchError: If there is an issue fetching the puzzle input.
+        ValueError: If the year/day are out of range.
+    """
+    if not session:
+        # Let the custom exception format a nice message that points at AOC_SESSION
+        raise MissingSessionTokenError(env_var="AOC_SESSION")
+
+    if not 1 <= day <= 25:
+        raise ValueError(f"Invalid day {day!r}. Advent of Code days are 1–25.")
+
+    if year < 2015:
+        raise ValueError(f"Invalid year {year!r}. Advent of Code started in 2015.")
+
+    cache_file = get_cache_input_file(year, day)
+    if cache_file.exists():
+        return cache_file.read_text(encoding="utf-8").rstrip()
+
+    url = f"{AOC_BASE_URL}/{year}/day/{day}/input"
+    headers = {
+        "Cookie": f"session={session}",
+        "User-Agent": USER_AGENT,
+    }
+
+    # --- Network layer --------------------------------------------------------
+
+    try:
+        with httpx.Client(timeout=10.0, headers=headers) as client:
+            response = client.get(url)
+
+    except httpx.TimeoutException as exc:
+        raise InputFetchError(
+            "Timed out while fetching puzzle input. Try again or check your network."
+        ) from exc
+
+    except httpx.RequestError as exc:
+        raise InputFetchError(
+            f"Network error while connecting to Advent of Code: {exc}"
+        ) from exc
+
+    # --- HTTP status handling -------------------------------------------------
+    if response.status_code == 404:
+        raise InputFetchError(f"Input not found for year={year}, day={day} (HTTP 404).")
+
+    if response.status_code == 400:
+        raise InputFetchError(
+            "Bad request (HTTP 400). Your session token may be invalid."
+        )
+
+    if 500 <= response.status_code < 600:
+        raise InputFetchError(
+            f"Server error from Advent of Code (HTTP {response.status_code})."
+        )
+
+    try:
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        raise InputFetchError(
+            f"Unexpected HTTP error: {exc.response.status_code}."
+        ) from exc
+
+    text = response.text
+
+    input_data = text.rstrip()
+
+    # Ensure the cache directory exists
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
+    cache_file.write_text(input_data, encoding="utf-8")
+
+    return input_data
