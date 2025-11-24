@@ -45,7 +45,7 @@ Repository = "https://github.com/snally-dev/elf"
 Issue-Tracker = "https://github.com/snally-dev/elf/issues"
 
 [project.scripts]
-elf = "elf.cli:app"
+elf = "elf.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["elf*"]
