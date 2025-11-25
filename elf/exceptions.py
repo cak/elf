@@ -24,7 +24,7 @@ class SubmissionError(ElfError):
 class MissingSessionTokenError(ElfError):
     """Raised when the Advent of Code session token is missing."""
 
-    def __init__(self, env_var: str = "AOC_SESSION_COOKIE") -> None:
+    def __init__(self, env_var: str = "AOC_SESSION") -> None:
         default = (
             f"Session token is missing. Set the '{env_var}' environment variable "
             "or pass the session token explicitly."
