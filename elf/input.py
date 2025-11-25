@@ -7,15 +7,15 @@ from .exceptions import InputFetchError, MissingSessionTokenError
 
 def get_input(year: int, day: int, session: str | None) -> str:
     """
-    Fetch the Advent of Code puzzle input for a specific year and day.
+    Fetch and cache the Advent of Code puzzle input for a specific year and day.
 
     Args:
         year: The year of the Advent of Code challenge.
         day: The day of the Advent of Code challenge.
-        session: Your Advent of Code session token.
+        session: Your Advent of Code session token, or None to signal missing.
 
     Returns:
-        The puzzle input for the specified day.
+        The puzzle input for the specified day. Uses the cache if available.
 
     Raises:
         MissingSessionTokenError: If no session token was provided.
@@ -23,7 +23,6 @@ def get_input(year: int, day: int, session: str | None) -> str:
         ValueError: If the year/day are out of range.
     """
     if not session:
-        # Let the custom exception format a nice message that points at AOC_SESSION
         raise MissingSessionTokenError(env_var="AOC_SESSION")
 
     if not 1 <= day <= 25:
@@ -38,7 +37,6 @@ def get_input(year: int, day: int, session: str | None) -> str:
 
     url = f"{AOC_BASE_URL}/{year}/day/{day}/input"
     headers = {
-        "Cookie": f"session={session}",
         "User-Agent": USER_AGENT,
     }
 
@@ -46,7 +44,7 @@ def get_input(year: int, day: int, session: str | None) -> str:
 
     try:
         with httpx.Client(timeout=10.0, headers=headers) as client:
-            response = client.get(url)
+            response = client.get(url, cookies={"session": session})
 
     except httpx.TimeoutException as exc:
         raise InputFetchError(
