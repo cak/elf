@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 from datetime import date
+from enum import Enum
 from typing import Annotated
 
 import typer
@@ -12,19 +11,46 @@ from .guesses import get_guesses
 from .input import get_input
 from .leaderboard import get_leaderboard
 
-app = typer.Typer(help="Advent of Code CLI")
+app = typer.Typer(
+    help="Advent of Code CLI", no_args_is_help=True, rich_markup_mode="rich"
+)
 
 console = Console()
 error_console = Console(stderr=True)
 
-today = date.today()
-THIS_YEAR = today.year
-THIS_DAY = today.day
 
-YearArg = Annotated[int, typer.Argument(help="Year of the event", min=2015)]
-DayArg = Annotated[int, typer.Argument(help="Day of the event (1–25)", min=1, max=25)]
+class OutputFormat(str, Enum):
+    TABLE = "table"
+    JSON = "json"
+
+
+_today = date.today()
+THIS_YEAR = _today.year
+THIS_DAY = _today.day
+
+YearArg = Annotated[
+    int,
+    typer.Argument(
+        help="Year of the event",
+        min=2015,
+        max=THIS_YEAR,
+    ),
+]
+DayArg = Annotated[
+    int,
+    typer.Argument(
+        help="Day of the event (1–25)",
+        min=1,
+        max=25,
+    ),
+]
 LevelArg = Annotated[
-    int, typer.Argument(help="Part of the puzzle (1 or 2)", min=1, max=2)
+    int,
+    typer.Argument(
+        help="Part of the puzzle (1 or 2)",
+        min=1,
+        max=2,
+    ),
 ]
 AnswerArg = Annotated[str, typer.Argument(help="Your answer to submit")]
 
@@ -56,7 +82,7 @@ def input_cmd(
     Fetch the input for a given year and day.
     """
     input_data = get_input(year, day, session)
-    typer.echo(input_data)
+    console.print(input_data, end="")  # preserve AoC input as-is
 
 
 @app.command()
@@ -72,7 +98,7 @@ def answer(
     Submit an answer for a given year and day.
     """
     if not answer:
-        typer.echo("❄️ You must provide an answer to submit.", err=True)
+        error_console.print("[red]❄️ You must provide an answer to submit.[/red]")
         raise typer.Exit(code=1)
 
     submit_result = submit_answer(
@@ -95,14 +121,15 @@ def leaderboard(
         typer.Option(help="View key for the private leaderboard, if required"),
     ] = None,
     session: SessionOpt = None,
-    table: Annotated[
-        bool,
+    output_format: Annotated[
+        OutputFormat,
         typer.Option(
-            "--table",
-            help="Display leaderboard as a table.",
-            show_default=True,
+            "--format",
+            "-f",
+            help="Output format: table, json",
+            case_sensitive=False,
         ),
-    ] = False,
+    ] = OutputFormat.TABLE,
 ) -> None:
     """
     Fetch and display a private leaderboard for a given year.
@@ -112,7 +139,7 @@ def leaderboard(
         session=session,
         board_id=board_id,
         view_key=view_key,
-        table=table,
+        json_fmt=(output_format is OutputFormat.JSON),
     )
 
     console.print(leaderboard_data)
@@ -126,8 +153,8 @@ def guesses(
     """
     Display cached guesses for a given year and day.
     """
-    guesses = get_guesses(year, day)
-    console.print(guesses)
+    guesses_data = get_guesses(year, day)
+    console.print(guesses_data)
 
 
 def main() -> None:
@@ -139,3 +166,7 @@ def main() -> None:
     except Exception as exc:
         error_console.print(f"[red]❄️ An unexpected error occurred: {exc}[/red]")
         raise typer.Exit(1)
+
+
+if __name__ == "__main__":
+    main()

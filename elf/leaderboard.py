@@ -13,7 +13,7 @@ def get_leaderboard(
     session: str | None,
     board_id: int,
     view_key: str | None,
-    table: bool = False,
+    json_fmt: bool = False,
 ):
     """
     Fetch a private leaderboard for a specific year.
@@ -43,11 +43,11 @@ def get_leaderboard(
             "Bad request (HTTP 400). Your session token or view key may be invalid."
         )
 
-    if table:
-        return format_leaderboard_as_table(response.json())
+    if json_fmt:
+        json_str = json.dumps(response.json(), indent=2)
+        return json_str
 
-    json_str = json.dumps(response.json(), indent=2)
-    return json_str
+    return format_leaderboard_as_table(response.json())
 
 
 def format_leaderboard_as_table(leaderboard_json: dict) -> Table:
