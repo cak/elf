@@ -10,6 +10,7 @@ authors = [
 requires-python = ">=3.11"
 
 dependencies = [
+    "click>=8.3.1",
     "httpx>=0.28.1",
     "pydantic>=2.12.4",
     "rich>=14.2.0",
