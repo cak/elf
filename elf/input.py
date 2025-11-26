@@ -1,7 +1,7 @@
 import httpx
 
+from .aoc_client import AOCClient
 from .config import get_cache_input_file
-from .constants import AOC_BASE_URL, USER_AGENT
 from .exceptions import InputFetchError, MissingSessionTokenError
 
 
@@ -35,16 +35,11 @@ def get_input(year: int, day: int, session: str | None) -> str:
     if cache_file.exists():
         return cache_file.read_text(encoding="utf-8").rstrip()
 
-    url = f"{AOC_BASE_URL}/{year}/day/{day}/input"
-    headers = {
-        "User-Agent": USER_AGENT,
-    }
-
     # --- Network layer --------------------------------------------------------
 
     try:
-        with httpx.Client(timeout=10.0, headers=headers) as client:
-            response = client.get(url, cookies={"session": session})
+        with AOCClient(session_token=session) as client:
+            response = client.fetch_input(year, day)
 
     except httpx.TimeoutException as exc:
         raise InputFetchError(

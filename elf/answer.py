@@ -6,8 +6,8 @@ from html.parser import HTMLParser
 
 import httpx
 
+from .aoc_client import AOCClient
 from .config import get_cache_guess_file
-from .constants import AOC_BASE_URL, USER_AGENT
 from .exceptions import MissingSessionTokenError, SubmissionError
 from .messages import (
     get_already_completed_message,
@@ -86,7 +86,7 @@ def submit_answer(
     day: int,
     level: int,
     answer: int | str,
-    session_token: str | None,
+    session: str | None,
     festive: bool = True,
 ) -> SubmissionResult:
     """
@@ -108,7 +108,7 @@ def submit_answer(
         SubmissionError: If there is an issue submitting the answer.
     """
 
-    if not session_token:
+    if not session:
         raise MissingSessionTokenError(env_var="AOC_SESSION")
 
     cache_file = get_cache_guess_file(year, day)
@@ -127,7 +127,7 @@ def submit_answer(
                 is_cached=True,
             )
 
-    return submit_to_aoc(year, day, level, answer, session_token, festive=festive)
+    return submit_to_aoc(year, day, level, answer, session, festive=festive)
 
 
 def submit_to_aoc(
@@ -138,25 +138,11 @@ def submit_to_aoc(
     session_token: str,
     festive: bool,
 ) -> SubmissionResult:
-    url = f"{AOC_BASE_URL}/{year}/day/{day}/answer"
-    headers = {
-        "User-Agent": USER_AGENT,
-    }
-    data = {"level": str(level), "answer": str(answer)}
-
     # --- Network layer --------------------------------------------------------
 
     try:
-        with httpx.Client(
-            timeout=10.0,
-            headers=headers,
-            follow_redirects=True,
-        ) as client:
-            response = client.post(
-                url,
-                data=data,
-                cookies={"session": session_token},
-            )
+        with AOCClient(session_token=session_token) as client:
+            response = client.submit_answer(year, day, str(answer), level)
     except httpx.TimeoutException as exc:
         raise SubmissionError(
             "Timed out while submitting answer. Try again or check your network."
