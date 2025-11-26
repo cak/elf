@@ -1,5 +1,4 @@
 import csv
-import logging
 from datetime import datetime, timezone
 from enum import Enum, auto
 from html.parser import HTMLParser
@@ -22,8 +21,7 @@ from .messages import (
     get_unexpected_response_message,
 )
 from .models import CachedGuessCheck, Guess, SubmissionResult, SubmissionStatus
-
-logger = logging.getLogger(__name__)
+from .utils import read_guesses
 
 
 class AocResponseParser(HTMLParser):
@@ -260,45 +258,7 @@ def write_guess_cache(
                 writer.writeheader()
             writer.writerow(row)
     except Exception as exc:
-        logger.error(f"Failed to write guess cache {cache_file}: {exc}")
-
-
-def read_guesses(year: int, day: int) -> list[Guess]:
-    cache_file = get_cache_guess_file(year, day)
-    if not cache_file.exists():
-        return []
-
-    guesses: list[Guess] = []
-
-    try:
-        with cache_file.open("r", newline="") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                status = SubmissionStatus[row.get("status", "UNKNOWN")]
-                guess_raw = row.get("guess", "")
-
-                try:
-                    guess_val: int | str = int(guess_raw)
-                except ValueError:
-                    guess_val = guess_raw
-
-                try:
-                    timestamp = datetime.fromisoformat(row["timestamp"])
-                except Exception:
-                    timestamp = datetime.now(timezone.utc)
-
-                guesses.append(
-                    Guess(
-                        timestamp=timestamp,
-                        part=int(row["part"]),
-                        guess=guess_val,
-                        status=status,
-                    )
-                )
-    except Exception as exc:
-        logger.error(f"Failed reading guess cache {cache_file}: {exc}")
-
-    return guesses
+        raise RuntimeError(f"Failed to write guess cache {cache_file}: {exc}")
 
 
 def check_cached_guesses(
