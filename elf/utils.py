@@ -1,7 +1,7 @@
 import csv
 from datetime import datetime, timezone
 
-from .config import get_cache_guess_file
+from .cache import get_cache_guess_file
 from .models import Guess, SubmissionStatus
 
 
