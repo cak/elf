@@ -1,6 +1,55 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum, auto
+from typing import Dict
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class StarCompletion(BaseModel):
+    """Single star completion (per day/part)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    get_star_ts: int = Field(
+        ...,
+        description="Unix timestamp when this star was acquired.",
+    )
+    star_index: int = Field(
+        ...,
+        description="Position in the leaderboard when the star was acquired.",
+    )
+
+
+class Member(BaseModel):
+    """A single leaderboard member."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: int
+    name: str | None = None
+    last_star_ts: int
+    stars: int
+    local_score: int
+    completion_day_level: Dict[int, Dict[int, StarCompletion]] = Field(
+        default_factory=dict,
+        description="Mapping of day -> part -> StarCompletion.",
+    )
+
+
+class Leaderboard(BaseModel):
+    """Top-level Advent of Code leaderboard object."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    num_days: int
+    event: str
+    day1_ts: int
+    owner_id: int
+    # member_id -> Member (keys in JSON are numeric strings; parsed as ints)
+    members: Dict[int, Member]
 
 
 @dataclass(frozen=True, slots=True)

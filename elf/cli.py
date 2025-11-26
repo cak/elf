@@ -9,10 +9,12 @@ from rich.console import Console
 from .answer import submit_answer
 from .exceptions import ElfError
 from .input import get_input
+from .leaderboard import get_leaderboard
 
 app = typer.Typer(help="Advent of Code CLI")
-console = Console()
 
+console = Console()
+error_console = Console(stderr=True)
 
 today = date.today()
 THIS_YEAR = today.year
@@ -36,8 +38,8 @@ SessionOpt = Annotated[
 FestiveOpt = Annotated[
     bool,
     typer.Option(
-        "--no-festive",
-        help="Disable festive / emoji output",
+        "--festive",
+        help="Enable festive emoji + colored output.",
         show_default=True,
     ),
 ]
@@ -53,7 +55,6 @@ def input_cmd(
     Fetch the input for a given year and day.
     """
     input_data = get_input(year, day, session)
-
     typer.echo(input_data)
 
 
@@ -63,7 +64,7 @@ def answer(
     day: DayArg = THIS_DAY,
     level: LevelArg = 1,
     answer: AnswerArg = "",
-    no_festive: FestiveOpt = False,
+    festive: FestiveOpt = False,
     session: SessionOpt = None,
 ) -> None:
     """
@@ -73,18 +74,55 @@ def answer(
         typer.echo("❄️ You must provide an answer to submit.", err=True)
         raise typer.Exit(code=1)
 
-    festive = not no_festive
-
-    submit_result = submit_answer(year, day, level, answer, session, festive=festive)
+    submit_result = submit_answer(
+        year=year,
+        day=day,
+        level=level,
+        answer=answer,
+        session=session,
+        festive=festive,
+    )
     console.print(submit_result.message)
+
+
+@app.command()
+def leaderboard(
+    year: YearArg = THIS_YEAR,
+    board_id: Annotated[int, typer.Argument(help="Private leaderboard ID")] = 0,
+    view_key: Annotated[
+        str | None,
+        typer.Option(help="View key for the private leaderboard, if required"),
+    ] = None,
+    session: SessionOpt = None,
+    table: Annotated[
+        bool,
+        typer.Option(
+            "--table",
+            help="Display leaderboard as a table.",
+            show_default=True,
+        ),
+    ] = False,
+) -> None:
+    """
+    Fetch and display a private leaderboard for a given year.
+    """
+    leaderboard_data = get_leaderboard(
+        year=year,
+        session=session,
+        board_id=board_id,
+        view_key=view_key,
+        table=table,
+    )
+
+    console.print(leaderboard_data)
 
 
 def main() -> None:
     try:
         app()
     except ElfError as exc:
-        typer.echo(f"❄️ {exc}", err=True)
-        raise SystemExit(1)
+        error_console.print(f"[red]❄️ {exc}[/red]")
+        raise typer.Exit(1)
     except Exception as exc:
-        typer.echo(f"❄️ An unexpected error occurred: {exc}", err=True)
-        raise SystemExit(1)
+        error_console.print(f"[red]❄️ An unexpected error occurred: {exc}[/red]")
+        raise typer.Exit(1)
