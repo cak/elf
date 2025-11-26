@@ -6,7 +6,6 @@ import typer
 from rich.console import Console
 
 from .answer import submit_answer
-from .exceptions import ElfError
 from .guesses import get_guesses
 from .input import get_input
 from .leaderboard import get_leaderboard
@@ -158,14 +157,7 @@ def guesses(
 
 
 def main() -> None:
-    try:
-        app()
-    except ElfError as exc:
-        error_console.print(f"[red]❄️ {exc}[/red]")
-        raise typer.Exit(1)
-    except Exception as exc:
-        error_console.print(f"[red]❄️ An unexpected error occurred: {exc}[/red]")
-        raise typer.Exit(1)
+    app()
 
 
 if __name__ == "__main__":
