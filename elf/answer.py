@@ -6,7 +6,7 @@ from html.parser import HTMLParser
 import httpx
 
 from .aoc_client import AOCClient
-from .config import get_cache_guess_file
+from .cache import get_cache_guess_file
 from .exceptions import MissingSessionTokenError, SubmissionError
 from .messages import (
     get_already_completed_message,

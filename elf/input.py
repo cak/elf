@@ -1,7 +1,7 @@
 import httpx
 
 from .aoc_client import AOCClient
-from .config import get_cache_input_file
+from .cache import get_cache_input_file
 from .exceptions import InputFetchError, MissingSessionTokenError
 
 

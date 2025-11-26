@@ -4,7 +4,7 @@ from rich.console import Group
 from rich.table import Table
 from rich.text import Text
 
-from .config import get_cache_guess_file
+from .cache import get_cache_guess_file
 from .models import Guess
 from .utils import read_guesses
 
