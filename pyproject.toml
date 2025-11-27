@@ -39,10 +39,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/snally-dev/elf"
-Documentation = "https://github.com/snally-dev/elf/"
-Repository = "https://github.com/snally-dev/elf"
-Issue-Tracker = "https://github.com/snally-dev/elf/issues"
+Homepage = "https://github.com/cak/elf"
+Documentation = "https://github.com/cak/elf/"
+Repository = "https://github.com/cak/elf"
+Issue-Tracker = "https://github.com/cak/elf/issues"
 
 [project.scripts]
 elf = "elf.cli:main"
