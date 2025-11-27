@@ -2,7 +2,8 @@ import httpx
 
 from .aoc_client import AOCClient
 from .cache import get_cache_input_file
-from .exceptions import InputFetchError, MissingSessionTokenError
+from .exceptions import InputFetchError, MissingSessionTokenError, PuzzleLockedError
+from .utils import CURRENT_YEAR, get_unlock_status
 
 
 def get_input(year: int, day: int, session: str | None) -> str:
@@ -22,6 +23,16 @@ def get_input(year: int, day: int, session: str | None) -> str:
         InputFetchError: If there is an issue fetching the puzzle input.
         ValueError: If the year/day are out of range.
     """
+    if year >= CURRENT_YEAR:
+        status = get_unlock_status(year, day)
+        if not status.unlocked:
+            raise PuzzleLockedError(
+                year=year,
+                day=day,
+                now=status.now,
+                unlock_time=status.unlock_time,
+            )
+
     if not session:
         raise MissingSessionTokenError(env_var="AOC_SESSION")
 

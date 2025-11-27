@@ -36,3 +36,17 @@ class MissingSessionTokenError(ElfError):
             "or pass the session token explicitly."
         )
         super().__init__(default)
+
+
+class PuzzleLockedError(ElfError):
+    """Raised when a puzzle has not yet unlocked in AoC time."""
+
+    def __init__(self, year: int, day: int, now, unlock_time) -> None:
+        self.year = year
+        self.day = day
+        self.now = now
+        self.unlock_time = unlock_time
+        super().__init__(
+            f"Puzzle {year}-12-{day:02d} is not unlocked yet. "
+            f"Current AoC time is {now.isoformat()}, unlocks at {unlock_time.isoformat()}."
+        )

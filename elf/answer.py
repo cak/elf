@@ -7,7 +7,7 @@ import httpx
 
 from .aoc_client import AOCClient
 from .cache import get_cache_guess_file
-from .exceptions import MissingSessionTokenError, SubmissionError
+from .exceptions import MissingSessionTokenError, PuzzleLockedError, SubmissionError
 from .messages import (
     get_already_completed_message,
     get_answer_too_high_message,
@@ -21,7 +21,7 @@ from .messages import (
     get_unexpected_response_message,
 )
 from .models import CachedGuessCheck, Guess, SubmissionResult, SubmissionStatus
-from .utils import read_guesses
+from .utils import CURRENT_YEAR, get_unlock_status, read_guesses
 
 
 class AocResponseParser(HTMLParser):
@@ -105,6 +105,15 @@ def submit_answer(
         MissingSessionTokenError: If no session token was provided.
         SubmissionError: If there is an issue submitting the answer.
     """
+    if year >= CURRENT_YEAR:
+        status = get_unlock_status(year, day)
+        if not status.unlocked:
+            raise PuzzleLockedError(
+                year=year,
+                day=day,
+                now=status.now,
+                unlock_time=status.unlock_time,
+            )
 
     if not session:
         raise MissingSessionTokenError(env_var="AOC_SESSION")

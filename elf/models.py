@@ -127,3 +127,10 @@ class CachedGuessCheck:
     previous_timestamp: datetime | None
     status: SubmissionStatus
     message: str
+
+
+@dataclass(slots=True)
+class UnlockStatus:
+    unlocked: bool
+    now: datetime
+    unlock_time: datetime

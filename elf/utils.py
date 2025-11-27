@@ -1,8 +1,11 @@
 import csv
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from .cache import get_cache_guess_file
-from .models import Guess, SubmissionStatus
+from .constants import AOC_TZ
+from .models import Guess, SubmissionStatus, UnlockStatus
+
+CURRENT_YEAR = date.today().year
 
 
 def read_guesses(year: int, day: int) -> list[Guess]:
@@ -41,3 +44,26 @@ def read_guesses(year: int, day: int) -> list[Guess]:
         raise RuntimeError(f"Failed reading guess cache {cache_file}: {exc}")
 
     return guesses
+
+
+def get_unlock_status(year: int, day: int) -> UnlockStatus:
+    """
+    Return whether the given AoC puzzle is unlocked yet, based on America/New_York.
+
+    AoC unlocks each day at midnight local time (Y-12-D 00:00 in America/New_York).
+    """
+    if not 1 <= day <= 25:
+        # Let existing validation handle out-of-range days elsewhere
+        raise ValueError(f"Invalid day {day!r}. Advent of Code days are 1–25.")
+
+    # Current time in AoC timezone
+    now = datetime.now(tz=AOC_TZ)
+
+    # Official unlock moment for this puzzle (AoC uses December only)
+    unlock_time = datetime(year=year, month=12, day=day, tzinfo=AOC_TZ)
+
+    return UnlockStatus(
+        unlocked=now >= unlock_time,
+        now=now,
+        unlock_time=unlock_time,
+    )

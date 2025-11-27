@@ -1,2 +1,3 @@
-AOC_BASE_URL = "https://adventofcode.com"
-USER_AGENT = "elf (+https://github.com/snally-dev/elf)"
+from zoneinfo import ZoneInfo
+
+AOC_TZ = ZoneInfo("America/New_York")
