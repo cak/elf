@@ -1,5 +1,4 @@
 from datetime import date
-from enum import Enum
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as pkg_version
 from typing import Annotated
@@ -12,6 +11,8 @@ from .cache import get_cache_dir
 from .guesses import get_guesses
 from .input import get_input
 from .leaderboard import get_leaderboard
+from .models import OpenKind, OutputFormat
+from .open import open_page
 
 app = typer.Typer(
     help="Advent of Code CLI",
@@ -21,12 +22,6 @@ app = typer.Typer(
 
 console = Console()
 error_console = Console(stderr=True)
-
-
-class OutputFormat(str, Enum):
-    TABLE = "table"
-    JSON = "json"
-
 
 _today = date.today()
 THIS_YEAR = _today.year
@@ -190,6 +185,27 @@ def guesses_cmd(
     """
     guesses_data = get_guesses(year, day)
     console.print(guesses_data)
+
+
+@app.command("open")
+def open_cmd(
+    year: YearArg = THIS_YEAR,
+    day: DayArg = THIS_DAY,
+    kind: Annotated[
+        OpenKind,
+        typer.Option(
+            "--kind",
+            "-k",
+            help="Kind of page to open: puzzle, input, website",
+            case_sensitive=False,
+        ),
+    ] = OpenKind.PUZZLE,
+) -> None:
+    """
+    Open the puzzle page for a given year and day in the default web browser.
+    """
+    open_msg = open_page(year, day, kind)
+    console.print(open_msg)
 
 
 @app.command("cache")

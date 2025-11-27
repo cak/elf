@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from enum import StrEnum, auto
+from enum import Enum, StrEnum, auto
 from typing import Dict
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -134,3 +134,14 @@ class UnlockStatus:
     unlocked: bool
     now: datetime
     unlock_time: datetime
+
+
+class OutputFormat(str, Enum):
+    TABLE = "table"
+    JSON = "json"
+
+
+class OpenKind(str, Enum):
+    WEBSITE = "website"
+    PUZZLE = "puzzle"
+    INPUT = "input"
