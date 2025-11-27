@@ -146,3 +146,30 @@ class OpenKind(str, Enum):
     WEBSITE = "website"
     PUZZLE = "puzzle"
     INPUT = "input"
+
+
+class DayStatus(BaseModel):
+    day: int = Field(..., ge=1, le=31)
+    stars: int = Field(..., ge=0, le=2)
+    href: str
+    aria_label: str
+
+    model_config = {
+        "frozen": True,  # makes objects hashable/immutable
+        "extra": "forbid",  # catch unexpected fields
+        "populate_by_name": True,
+    }
+
+
+class YearStatus(BaseModel):
+    year: int = Field(..., ge=2015)
+    username: str
+    is_supporter: bool
+    total_stars: int = Field(..., ge=0)
+    days: list[DayStatus]
+
+    model_config = {
+        "frozen": True,
+        "extra": "forbid",
+        "populate_by_name": True,
+    }

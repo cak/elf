@@ -64,3 +64,10 @@ class AOCClient:
         else:
             response = self._get(f"/{year}/leaderboard/private/view/{board_id}.json")
         return response
+
+    def fetch_event(self, year: int) -> httpx.Response:
+        """
+        Fetch general event information for a specific year (html).
+        """
+        response = self._get(f"/{year}")
+        return response

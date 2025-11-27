@@ -13,6 +13,7 @@ from .input import get_input
 from .leaderboard import get_leaderboard
 from .models import OpenKind, OutputFormat
 from .open import open_page
+from .status import get_status
 
 app = typer.Typer(
     help="Advent of Code CLI",
@@ -185,6 +186,32 @@ def guesses_cmd(
     """
     guesses_data = get_guesses(year, day)
     console.print(guesses_data)
+
+
+@app.command("status")
+def status_cmd(
+    year: YearArg = THIS_YEAR,
+    session: SessionOpt = None,
+    output_format: Annotated[
+        OutputFormat,
+        typer.Option(
+            "--format",
+            "-f",
+            help="Output format: table, json, model",
+            case_sensitive=False,
+        ),
+    ] = OutputFormat.TABLE,
+) -> None:
+    """
+    Fetch and display your Advent of Code status for a given year.
+    """
+    status_data = get_status(
+        year=year,
+        session=session,
+        fmt=output_format,
+    )
+
+    console.print(status_data)
 
 
 @app.command("open")
