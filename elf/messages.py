@@ -1,6 +1,6 @@
 import random
 
-from elf.models import Guess
+from .models import Guess
 
 
 def get_positive_message(answer: int | str, *, festive: bool = True) -> str:

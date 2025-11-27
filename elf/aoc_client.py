@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from types import TracebackType
+
 import httpx
 
 
@@ -27,10 +31,15 @@ class AOCClient:
     def _close(self) -> None:
         self._client.close()
 
-    def __enter__(self):
+    def __enter__(self) -> "AOCClient":
         return self
 
-    def __exit__(self, exc_type, exc, tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         self._close()
 
     def fetch_input(self, year: int, day: int) -> httpx.Response:

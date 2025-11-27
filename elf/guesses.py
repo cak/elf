@@ -1,4 +1,4 @@
-from datetime import timezone
+from datetime import datetime, timezone
 
 from rich.console import Group
 from rich.table import Table
@@ -18,7 +18,7 @@ def get_guesses(year: int, day: int) -> Group:
     return render_guess_tables(cached_guesses)
 
 
-def render_guess_tables(guesses: list[Guess]):
+def render_guess_tables(guesses: list[Guess]) -> Group:
     # normalize datetimes
     guesses = sorted(guesses, key=lambda g: _ensure_aware(g.timestamp))
 
@@ -55,7 +55,7 @@ def _render_single_table(guesses: list[Guess], title: str) -> Table:
     return table
 
 
-def _ensure_aware(dt):
+def _ensure_aware(dt: datetime) -> datetime:
     """Make any datetime UTC-aware."""
     if dt.tzinfo is None:
         return dt.replace(tzinfo=timezone.utc)

@@ -14,7 +14,7 @@ def get_leaderboard(
     board_id: int,
     view_key: str | None,
     fmt: OutputFormat = OutputFormat.MODEL,
-):
+) -> Leaderboard | str | Table:
     """
     Fetch a private leaderboard for a specific year.
 
@@ -52,9 +52,11 @@ def get_leaderboard(
             return json_str
         case OutputFormat.TABLE:
             return format_leaderboard_as_table(response.json())
+        case _:
+            raise ValueError(f"Unsupported output format: {fmt}")
 
 
-def format_leaderboard_as_table(leaderboard_json: dict) -> Table:
+def format_leaderboard_as_table(leaderboard_json: dict[str, object]) -> Table:
     leaderboard = Leaderboard.model_validate(leaderboard_json)
     table = Table(title=f"Advent of Code {leaderboard.event} – Private Leaderboard")
 

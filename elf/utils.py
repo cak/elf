@@ -16,7 +16,7 @@ def read_guesses(year: int, day: int) -> list[Guess]:
     guesses: list[Guess] = []
 
     try:
-        with cache_file.open("r", newline="") as f:
+        with cache_file.open("r", newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 status = SubmissionStatus[row.get("status", "UNKNOWN")]
@@ -41,7 +41,7 @@ def read_guesses(year: int, day: int) -> list[Guess]:
                     )
                 )
     except Exception as exc:
-        raise RuntimeError(f"Failed reading guess cache {cache_file}: {exc}")
+        raise RuntimeError(f"Failed reading guess cache {cache_file}: {exc}") from exc
 
     return guesses
 

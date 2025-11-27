@@ -2,6 +2,7 @@ import json
 import re
 
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 from rich.table import Table
 
 from .aoc_client import AOCClient
@@ -10,7 +11,9 @@ from .models import DayStatus, OutputFormat, YearStatus
 from .utils import CURRENT_YEAR
 
 
-def get_status(year: int, session: str | None, fmt: OutputFormat):
+def get_status(
+    year: int, session: str | None, fmt: OutputFormat
+) -> YearStatus | str | Table:
     if not session:
         raise MissingSessionTokenError(env_var="AOC_SESSION")
 
@@ -41,9 +44,11 @@ def get_status(year: int, session: str | None, fmt: OutputFormat):
             return json.dumps(year_status.model_dump(), indent=2)
         case OutputFormat.TABLE:
             return build_year_status_table(year_status)
+        case _:
+            raise ValueError(f"Unsupported output format: {fmt}")
 
 
-def _parse_total_stars(user_div) -> int:
+def _parse_total_stars(user_div: Tag) -> int:
     """
     Parse total stars from the header, e.g.:
     <span class="star-count">11*</span>
@@ -58,7 +63,7 @@ def _parse_total_stars(user_div) -> int:
     return int(m.group(1)) if m else 0
 
 
-def _parse_username_and_supporter(user_div) -> tuple[str, bool]:
+def _parse_username_and_supporter(user_div: Tag) -> tuple[str, bool]:
     """
     user_div looks like:
       <div class="user">

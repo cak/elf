@@ -261,13 +261,13 @@ def write_guess_cache(
 
     try:
         file_exists = cache_file.exists()
-        with cache_file.open("a", newline="") as f:
+        with cache_file.open("a", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=row.keys())
             if not file_exists:
                 writer.writeheader()
             writer.writerow(row)
     except Exception as exc:
-        raise RuntimeError(f"Failed to write guess cache {cache_file}: {exc}")
+        raise RuntimeError(f"Failed to write guess cache {cache_file}: {exc}") from exc
 
 
 def check_cached_guesses(

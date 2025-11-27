@@ -2,7 +2,10 @@ import time
 from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
-from typing import Any
+from typing import ParamSpec, TypeVar
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 def parse_input(input_str: str) -> list[str]:
@@ -19,7 +22,9 @@ def parse_input(input_str: str) -> list[str]:
     return input_str.strip().splitlines()
 
 
-def timer(enabled: bool = True, logger: Callable[[str], None] | None = None):
+def timer(
+    enabled: bool = True, logger: Callable[[str], None] | None = None
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Decorator to measure the execution time of functions.
 
     Args:
@@ -31,17 +36,17 @@ def timer(enabled: bool = True, logger: Callable[[str], None] | None = None):
         Callable[[Callable[..., Any]], Callable[..., Any]]: The decorator that wraps the function.
     """
 
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            start_time: float | None = None
             if enabled:
                 start_time = time.perf_counter()
-            else:
-                start_time = None  # Ensure start_time is always defined
+
             result = func(*args, **kwargs)
             if enabled:
                 end_time = time.perf_counter()
-                duration = end_time - start_time if start_time is not None else 0
+                duration = end_time - start_time if start_time is not None else 0.0
                 message = (
                     f"⏱️ Function '{func.__name__}' took {duration:.6f}s to complete 🎅."
                 )
@@ -59,9 +64,9 @@ def timer(enabled: bool = True, logger: Callable[[str], None] | None = None):
 def read_test_input(base_dir: Path) -> str:
     """Read test input from test_input.txt file."""
     test_input_file = base_dir / "test_input.txt"
-    if test_input_file.exists():
-        return test_input_file.read_text().strip()
-    else:
+    if not test_input_file.exists():
         raise FileNotFoundError(
             "🛑 No test_input.txt found. Please add test input data."
         )
+
+    return test_input_file.read_text(encoding="utf-8").strip()
