@@ -5,7 +5,7 @@ from rich.table import Table
 
 from .aoc_client import AOCClient
 from .exceptions import InputFetchError, MissingSessionTokenError
-from .models import Leaderboard
+from .models import Leaderboard, OutputFormat
 
 
 def get_leaderboard(
@@ -13,7 +13,7 @@ def get_leaderboard(
     session: str | None,
     board_id: int,
     view_key: str | None,
-    json_fmt: bool = False,
+    fmt: OutputFormat = OutputFormat.MODEL,
 ):
     """
     Fetch a private leaderboard for a specific year.
@@ -43,11 +43,15 @@ def get_leaderboard(
             "Bad request (HTTP 400). Your session token or view key may be invalid."
         )
 
-    if json_fmt:
-        json_str = json.dumps(response.json(), indent=2)
-        return json_str
-
-    return format_leaderboard_as_table(response.json())
+    match fmt:
+        case OutputFormat.MODEL:
+            leaderboard = Leaderboard.model_validate(response.json())
+            return leaderboard
+        case OutputFormat.JSON:
+            json_str = json.dumps(response.json(), indent=2)
+            return json_str
+        case OutputFormat.TABLE:
+            return format_leaderboard_as_table(response.json())
 
 
 def format_leaderboard_as_table(leaderboard_json: dict) -> Table:

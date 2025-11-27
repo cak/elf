@@ -137,6 +137,7 @@ class UnlockStatus:
 
 
 class OutputFormat(str, Enum):
+    MODEL = "model"
     TABLE = "table"
     JSON = "json"
 

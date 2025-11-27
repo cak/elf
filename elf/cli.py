@@ -156,7 +156,7 @@ def leaderboard_cmd(
         typer.Option(
             "--format",
             "-f",
-            help="Output format: table, json",
+            help="Output format: table, json, model",
             case_sensitive=False,
         ),
     ] = OutputFormat.TABLE,
@@ -169,7 +169,7 @@ def leaderboard_cmd(
         session=session,
         board_id=board_id,
         view_key=view_key,
-        json_fmt=(output_format == OutputFormat.JSON),
+        fmt=output_format,
     )
 
     console.print(leaderboard_data)
