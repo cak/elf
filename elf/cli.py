@@ -1,17 +1,22 @@
 from datetime import date
 from enum import Enum
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as pkg_version
 from typing import Annotated
 
 import typer
 from rich.console import Console
 
 from .answer import submit_answer
+from .cache import get_cache_dir
 from .guesses import get_guesses
 from .input import get_input
 from .leaderboard import get_leaderboard
 
 app = typer.Typer(
-    help="Advent of Code CLI", no_args_is_help=True, rich_markup_mode="rich"
+    help="Advent of Code CLI",
+    no_args_is_help=True,
+    rich_markup_mode="rich",
 )
 
 console = Console()
@@ -25,7 +30,7 @@ class OutputFormat(str, Enum):
 
 _today = date.today()
 THIS_YEAR = _today.year
-THIS_DAY = _today.day
+THIS_DAY = min(_today.day, 25)
 
 YearArg = Annotated[
     int,
@@ -71,6 +76,37 @@ FestiveOpt = Annotated[
 ]
 
 
+def version_callback(value: bool) -> None:
+    if not value:
+        return
+
+    try:
+        v = pkg_version("elf")  # use your actual package name
+    except PackageNotFoundError:
+        v = "0.0.0 (local)"
+
+    console.print(f"Advent of Code CLI {v}")
+    raise typer.Exit()
+
+
+@app.callback(invoke_without_command=True)
+def cli_root(
+    _version: bool | None = typer.Option(
+        None,
+        "--version",
+        "-V",
+        help="Show the CLI version and exit.",
+        callback=version_callback,
+        is_eager=True,
+    ),
+) -> None:
+    """
+    Global options for the Advent of Code CLI.
+    """
+    # version_callback handles --version; nothing else to do here.
+    return
+
+
 @app.command("input")
 def input_cmd(
     year: YearArg = THIS_YEAR,
@@ -84,8 +120,8 @@ def input_cmd(
     console.print(input_data, end="")  # preserve AoC input as-is
 
 
-@app.command()
-def answer(
+@app.command("answer")
+def answer_cmd(
     year: YearArg = THIS_YEAR,
     day: DayArg = THIS_DAY,
     level: LevelArg = 1,
@@ -111,8 +147,8 @@ def answer(
     console.print(submit_result.message)
 
 
-@app.command()
-def leaderboard(
+@app.command("leaderboard")
+def leaderboard_cmd(
     year: YearArg = THIS_YEAR,
     board_id: Annotated[int, typer.Argument(help="Private leaderboard ID")] = 0,
     view_key: Annotated[
@@ -138,14 +174,14 @@ def leaderboard(
         session=session,
         board_id=board_id,
         view_key=view_key,
-        json_fmt=(output_format is OutputFormat.JSON),
+        json_fmt=(output_format == OutputFormat.JSON),
     )
 
     console.print(leaderboard_data)
 
 
-@app.command()
-def guesses(
+@app.command("guesses")
+def guesses_cmd(
     year: YearArg = THIS_YEAR,
     day: DayArg = THIS_DAY,
 ) -> None:
@@ -154,6 +190,23 @@ def guesses(
     """
     guesses_data = get_guesses(year, day)
     console.print(guesses_data)
+
+
+@app.command("cache")
+def cache_cmd() -> None:
+    """
+    Show information about the local cache.
+    """
+    cache_dir = get_cache_dir()
+    if not cache_dir.exists():
+        console.print("[dim]No cache directory found yet.[/dim]")
+        console.print(f"[dim]Expected location: {cache_dir}[/dim]")
+        return
+
+    files = [p for p in cache_dir.rglob("*") if p.is_file()]
+    console.print(f"[green]Cache directory:[/green] {cache_dir}")
+    console.print(f"[green]Cached files:[/green] {len(files)}")
+    console.print("[dim]To clear the cache, delete this directory manually.[/dim]")
 
 
 def main() -> None:
