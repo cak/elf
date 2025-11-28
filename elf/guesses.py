@@ -5,7 +5,7 @@ from rich.table import Table
 from rich.text import Text
 
 from .cache import get_cache_guess_file
-from .models import Guess
+from .models import Guess, SubmissionStatus
 from .utils import read_guesses
 
 
@@ -40,17 +40,17 @@ def _render_single_table(guesses: list[Guess], title: str) -> Table:
     table.add_column("Guess", justify="right", style="yellow")
     table.add_column("Status", style="green")
 
-    for g in guesses:
-        ts = _ensure_aware(g.timestamp).strftime("%Y-%m-%d %H:%M:%S")
+    for guess in guesses:
+        ts = _ensure_aware(guess.timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
-        if g.status.value == "completed":
+        if guess.status is SubmissionStatus.COMPLETED:
             status_text = Text("Completed", style="bold green")
-        elif g.status.value == "unknown":
+        elif guess.status is SubmissionStatus.UNKNOWN:
             status_text = Text("Unknown", style="yellow")
         else:
-            status_text = Text(g.status.value)
+            status_text = Text(guess.status.value)
 
-        table.add_row(ts, str(g.guess), status_text)
+        table.add_row(ts, str(guess.guess), status_text)
 
     return table
 
