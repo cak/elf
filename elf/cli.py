@@ -77,11 +77,7 @@ def handle_cli_errors(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except ElfError as exc:
-            if _DEBUG:
-                raise
-            error_console.print(f"[red]❄️ {exc}[/red]")
-        except (ValueError, RuntimeError) as exc:
+        except (ElfError, Exception) as exc:
             if _DEBUG:
                 raise
             error_console.print(f"[red]❄️ {exc}[/red]")
@@ -107,13 +103,14 @@ def version_callback(value: bool) -> None:
 
 @app.callback(invoke_without_command=True)
 def cli_root(
-    _version: bool | None = typer.Option(
-        None,
+    _version: bool = typer.Option(
+        False,
         "--version",
         "-V",
         help="Show the CLI version and exit.",
         callback=version_callback,
         is_eager=True,
+        is_flag=True,
     ),
     debug: bool = typer.Option(
         False,
