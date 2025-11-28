@@ -222,7 +222,7 @@ def guesses_cmd(
 @app.command("status")
 @handle_cli_errors
 def status_cmd(
-    year: YearArg,
+    year: YearArg | None = None,
     session: SessionOpt = None,
     output_format: Annotated[
         OutputFormat,

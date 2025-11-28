@@ -134,7 +134,7 @@ Defaults:
 Submit an answer with safety guardrails. Requires a session cookie. Guardrails use your local guess cache to short-circuit duplicate answers and infer too-high/too-low for integer guesses.
 
 ```sh
-Usage: elf answer [YEAR] [DAY] [LEVEL] [ANSWER]
+Usage: elf answer YEAR DAY LEVEL ANSWER
 
 Options:
   --session TEXT  AOC session cookie
@@ -142,6 +142,7 @@ Options:
 
 Behaviors:
 
+- Year and day are required to avoid accidental submissions.
 - Detects **locked puzzles** (year >= current year) and shows unlock timestamp
 - Identifies **too high / too low / duplicate** guesses from local cache
 - Writes to guess cache automatically (per part)
@@ -184,6 +185,9 @@ Options:
   --format table|json|model
 ```
 
+Defaults:
+- `year`: current year if omitted
+
 Supports:
 
 - **table:** pretty Rich table
@@ -201,6 +205,9 @@ Options:
   --session TEXT
   --format table|json|model
 ```
+
+Defaults:
+- `year`: current year if omitted
 
 Prints stars for each day and your AoC++ badge.
 
