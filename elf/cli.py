@@ -137,10 +137,10 @@ def input_cmd(
 @app.command("answer")
 @handle_cli_errors
 def answer_cmd(
-    year: YearArg = None,
-    day: DayArg = None,
-    level: LevelArg = 1,
-    answer: AnswerArg = "",
+    year: YearArg,
+    day: DayArg,
+    level: LevelArg,
+    answer: AnswerArg,
     session: SessionOpt = None,
 ) -> None:
     """
@@ -148,6 +148,7 @@ def answer_cmd(
     """
     year = year or _current_year()
     day = day or _current_day()
+    level = level or 1
 
     submit_result = submit_answer(
         year=year,
@@ -162,7 +163,7 @@ def answer_cmd(
 @app.command("leaderboard")
 @handle_cli_errors
 def leaderboard_cmd(
-    year: YearArg = _current_year(),
+    year: YearArg = None,
     board_id: Annotated[int, typer.Argument(help="Private leaderboard ID")] = 0,
     view_key: Annotated[
         str | None,
