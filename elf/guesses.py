@@ -47,10 +47,20 @@ def _render_single_table(guesses: list[Guess], title: str) -> Table:
     for guess in guesses:
         ts = _ensure_aware(guess.timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
-        if guess.status is SubmissionStatus.COMPLETED:
+        if guess.status is SubmissionStatus.CORRECT:
+            status_text = Text("Correct", style="bold green")
+        elif guess.status is SubmissionStatus.COMPLETED:
             status_text = Text("Completed", style="bold green")
         elif guess.status is SubmissionStatus.UNKNOWN:
             status_text = Text("Unknown", style="yellow")
+        elif guess.status is SubmissionStatus.INCORRECT:
+            status_text = Text("Incorrect", style="red")
+        elif guess.status is SubmissionStatus.WAIT:
+            status_text = Text("Wait", style="magenta")
+        elif guess.status is SubmissionStatus.TOO_HIGH:
+            status_text = Text("Too High", style="purple")
+        elif guess.status is SubmissionStatus.TOO_LOW:
+            status_text = Text("Too Low", style="blue")
         else:
             status_text = Text(guess.status.value)
 
