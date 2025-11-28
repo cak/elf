@@ -1,10 +1,12 @@
 import os
 
+from rich.table import Table
+
 from .answer import submit_answer
 from .exceptions import MissingSessionTokenError
 from .input import get_input
 from .leaderboard import get_leaderboard
-from .models import OutputFormat, SubmissionResult
+from .models import Leaderboard, OutputFormat, SubmissionResult
 from .status import get_status
 
 
@@ -101,7 +103,7 @@ def get_private_leaderboard(
     board_id: int,
     view_key: str | None,
     fmt: OutputFormat = OutputFormat.MODEL,
-):
+) -> Leaderboard | str | Table:
     """
     Retrieve a private leaderboard for a given year.
 
@@ -141,8 +143,14 @@ def get_private_leaderboard(
     - Advent of Code requires authentication **even for view-key access**.
     - The returned structure depends on ``OutputFormat``.
     """
+    if year < 2015:
+        raise ValueError(f"Invalid year {year!r}. Advent of Code started in 2015.")
+
+    if board_id <= 0:
+        raise ValueError("Board ID must be a positive integer.")
+
     session_token = (
-        _resolve_session(session) if view_key is not None else (session or "")
+        _resolve_session(session)
     )
     return get_leaderboard(year, session_token, board_id, view_key, fmt)
 
