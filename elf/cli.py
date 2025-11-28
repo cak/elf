@@ -174,8 +174,8 @@ def answer_cmd(
 @app.command("leaderboard")
 @handle_cli_errors
 def leaderboard_cmd(
-    year: YearArg = None,
-    board_id: Annotated[int, typer.Argument(help="Private leaderboard ID")] = 0,
+    year: YearArg,
+    board_id: Annotated[int, typer.Argument(help="Private leaderboard ID")],
     view_key: Annotated[
         str | None,
         typer.Option(help="View key for the private leaderboard, if required"),
@@ -195,6 +195,7 @@ def leaderboard_cmd(
     Fetch and display a private leaderboard for a given year.
     """
     year = year or _current_year()
+
     leaderboard_data = get_leaderboard(
         year=year,
         session=session,
