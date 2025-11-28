@@ -91,6 +91,8 @@ def handle_cli_errors(func):
             return func(*args, **kwargs)
         except typer.Exit:
             raise
+        except KeyboardInterrupt:
+            raise typer.Exit(code=130)
         except ElfError as exc:
             if _DEBUG:
                 raise
@@ -98,7 +100,9 @@ def handle_cli_errors(func):
         except Exception as exc:
             if _DEBUG:
                 raise
-            error_console.print(f"[red]Unexpected error: {exc}[/red]")
+            error_console.print(
+                f"[red]Unexpected {exc.__class__.__name__}: {exc}[/red]"
+            )
         raise typer.Exit(code=1)
 
     return wrapper
