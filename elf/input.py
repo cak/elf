@@ -85,7 +85,7 @@ def get_input(year: int, day: int, session: str | None) -> str:
 
     text = response.text
 
-    input_data = text.rstrip()
+    input_data = text
 
     # Ensure the cache directory exists
     cache_file.parent.mkdir(parents=True, exist_ok=True)
