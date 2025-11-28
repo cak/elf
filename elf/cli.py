@@ -26,6 +26,7 @@ app = typer.Typer(
 
 console = Console()
 error_console = Console(stderr=True)
+_DEBUG = False
 
 
 def _current_year() -> int:
@@ -77,8 +78,12 @@ def handle_cli_errors(func):
         try:
             return func(*args, **kwargs)
         except ElfError as exc:
+            if _DEBUG:
+                raise
             error_console.print(f"[red]❄️ {exc}[/red]")
         except (ValueError, RuntimeError) as exc:
+            if _DEBUG:
+                raise
             error_console.print(f"[red]❄️ {exc}[/red]")
         raise typer.Exit(code=1)
 
@@ -110,12 +115,18 @@ def cli_root(
         callback=version_callback,
         is_eager=True,
     ),
+    debug: bool = typer.Option(
+        False,
+        "--debug",
+        help="Raise errors with tracebacks (also via ELF_DEBUG=1).",
+        envvar="ELF_DEBUG",
+    ),
 ) -> None:
     """
     Global options for the Advent of Code CLI.
     """
-    # version_callback handles --version; nothing else to do here.
-    return
+    global _DEBUG
+    _DEBUG = debug
 
 
 @app.command("input")
