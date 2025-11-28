@@ -8,7 +8,7 @@ from bs4.element import Tag
 from rich.table import Table
 
 from .aoc_client import AOCClient
-from .exceptions import InputFetchError, MissingSessionTokenError
+from .exceptions import MissingSessionTokenError, StatusFetchError
 from .models import DayStatus, OutputFormat, YearStatus
 from .utils import CURRENT_YEAR
 
@@ -32,38 +32,38 @@ def get_status(
         try:
             response = client.fetch_event(year)
         except httpx.TimeoutException as exc:
-            raise InputFetchError(
+            raise StatusFetchError(
                 "Timed out while fetching status. Try again or check your network."
             ) from exc
         except httpx.RequestError as exc:
-            raise InputFetchError(
+            raise StatusFetchError(
                 f"Network error while connecting to Advent of Code: {exc}"
             ) from exc
 
     if response.status_code == 404:
-        raise InputFetchError(f"Event page not found for year={year} (HTTP 404).")
+        raise StatusFetchError(f"Event page not found for year={year} (HTTP 404).")
 
     if response.status_code == 400:
-        raise InputFetchError(
+        raise StatusFetchError(
             "Bad request (HTTP 400). Your session token may be invalid."
         )
 
     if 500 <= response.status_code < 600:
-        raise InputFetchError(
+        raise StatusFetchError(
             f"Server error from Advent of Code (HTTP {response.status_code}). Your session token may be invalid."
         )
 
     try:
         response.raise_for_status()
     except httpx.HTTPStatusError as exc:
-        raise InputFetchError(
+        raise StatusFetchError(
             f"Unexpected HTTP error: {exc.response.status_code}."
         ) from exc
 
     logged_in = parse_login_state(response.text)
 
     if not logged_in:
-        raise InputFetchError(
+        raise StatusFetchError(
             "Session cookie invalid or expired. "
             "Update AOC_SESSION with a valid 'session' cookie from your browser."
         )
@@ -71,7 +71,7 @@ def get_status(
     try:
         year_status = parse_year_status(response.text)
     except Exception as exc:
-        raise InputFetchError("Failed to parse Advent of Code status page.") from exc
+        raise StatusFetchError("Failed to parse Advent of Code status page.") from exc
 
     match fmt:
         case OutputFormat.MODEL:

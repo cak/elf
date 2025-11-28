@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from rich.table import Table
 
 from .aoc_client import AOCClient
-from .exceptions import InputFetchError, MissingSessionTokenError
+from .exceptions import LeaderboardFetchError, MissingSessionTokenError
 from .models import Leaderboard, OutputFormat
 
 
@@ -43,47 +43,47 @@ def get_leaderboard(
         with AOCClient(session_token=session_token) as client:
             response = client.fetch_leaderboard(year, board_id, view_key)
     except httpx.TimeoutException as exc:
-        raise InputFetchError(
+        raise LeaderboardFetchError(
             "Timed out while fetching leaderboard. Try again or check your network."
         ) from exc
     except httpx.RequestError as exc:
-        raise InputFetchError(
+        raise LeaderboardFetchError(
             f"Network error while connecting to Advent of Code: {exc}"
         ) from exc
 
     if response.status_code == 404:
-        raise InputFetchError(
+        raise LeaderboardFetchError(
             f"Leaderboard not found for year={year}, board_id={board_id} (HTTP 404)."
         )
 
     if response.status_code == 400:
-        raise InputFetchError(
+        raise LeaderboardFetchError(
             "Bad request (HTTP 400). Your session token or view key may be invalid."
         )
 
     if 500 <= response.status_code < 600:
-        raise InputFetchError(
+        raise LeaderboardFetchError(
             f"Server error from Advent of Code (HTTP {response.status_code}). Your session token may be invalid."
         )
 
     try:
         response.raise_for_status()
     except httpx.HTTPStatusError as exc:
-        raise InputFetchError(
+        raise LeaderboardFetchError(
             f"Unexpected HTTP error: {exc.response.status_code}."
         ) from exc
 
     try:
         payload = response.json()
     except ValueError as exc:
-        raise InputFetchError(
+        raise LeaderboardFetchError(
             "Failed to decode leaderboard JSON. Your session/view key may be invalid."
         ) from exc
 
     try:
         leaderboard = Leaderboard.model_validate(payload)
     except ValidationError as exc:
-        raise InputFetchError(
+        raise LeaderboardFetchError(
             "Unexpected leaderboard schema from Advent of Code."
         ) from exc
 

@@ -13,6 +13,22 @@ class InputFetchError(ElfError):
         super().__init__(message or default)
 
 
+class LeaderboardFetchError(ElfError):
+    """Raised when there is an issue fetching a private leaderboard."""
+
+    def __init__(self, message: str | None = None) -> None:
+        default = "Failed to fetch Advent of Code leaderboard."
+        super().__init__(message or default)
+
+
+class StatusFetchError(ElfError):
+    """Raised when there is an issue fetching a user's status page."""
+
+    def __init__(self, message: str | None = None) -> None:
+        default = "Failed to fetch Advent of Code status."
+        super().__init__(message or default)
+
+
 class SubmissionError(ElfError):
     """Raised when there is an issue submitting the answer."""
 
