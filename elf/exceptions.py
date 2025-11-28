@@ -1,14 +1,8 @@
-from click import ClickException
-
-
-class ElfError(ClickException):
+class ElfError(Exception):
     """Base exception for elf package errors."""
 
     def __init__(self, message: str | None = None) -> None:
         super().__init__(message or "An error occurred")
-
-    def format_message(self):
-        return f"❄️ {self.message}"
 
 
 class InputFetchError(ElfError):

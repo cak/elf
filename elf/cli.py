@@ -1,4 +1,5 @@
 from datetime import datetime
+from functools import wraps
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as pkg_version
 from typing import Annotated
@@ -9,6 +10,7 @@ from rich.console import Console
 from .answer import submit_answer
 from .cache import get_cache_dir
 from .constants import AOC_TZ
+from .exceptions import ElfError
 from .guesses import get_guesses
 from .input import get_input
 from .leaderboard import get_leaderboard
@@ -64,6 +66,20 @@ SessionOpt = Annotated[
 ]
 
 
+def handle_cli_errors(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except ElfError as exc:
+            error_console.print(f"[red]❄️ {exc}[/red]")
+        except (ValueError, RuntimeError) as exc:
+            error_console.print(f"[red]❄️ {exc}[/red]")
+        raise typer.Exit(code=1)
+
+    return wrapper
+
+
 def version_callback(value: bool) -> None:
     if not value:
         return
@@ -98,6 +114,7 @@ def cli_root(
 
 
 @app.command("input")
+@handle_cli_errors
 def input_cmd(
     year: YearArg = THIS_YEAR,
     day: DayArg = THIS_DAY,
@@ -111,6 +128,7 @@ def input_cmd(
 
 
 @app.command("answer")
+@handle_cli_errors
 def answer_cmd(
     year: YearArg = THIS_YEAR,
     day: DayArg = THIS_DAY,
@@ -136,6 +154,7 @@ def answer_cmd(
 
 
 @app.command("leaderboard")
+@handle_cli_errors
 def leaderboard_cmd(
     year: YearArg = THIS_YEAR,
     board_id: Annotated[int, typer.Argument(help="Private leaderboard ID")] = 0,
@@ -169,6 +188,7 @@ def leaderboard_cmd(
 
 
 @app.command("guesses")
+@handle_cli_errors
 def guesses_cmd(
     year: YearArg = THIS_YEAR,
     day: DayArg = THIS_DAY,
@@ -181,6 +201,7 @@ def guesses_cmd(
 
 
 @app.command("status")
+@handle_cli_errors
 def status_cmd(
     year: YearArg = THIS_YEAR,
     session: SessionOpt = None,
@@ -207,6 +228,7 @@ def status_cmd(
 
 
 @app.command("open")
+@handle_cli_errors
 def open_cmd(
     year: YearArg = THIS_YEAR,
     day: DayArg = THIS_DAY,
@@ -228,6 +250,7 @@ def open_cmd(
 
 
 @app.command("cache")
+@handle_cli_errors
 def cache_cmd() -> None:
     """
     Show information about the local cache.
