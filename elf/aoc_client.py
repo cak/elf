@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import atexit
-from types import TracebackType
 import time
+from types import TracebackType
 
 import httpx
-
 
 _shared_client: httpx.Client | None = None
 
