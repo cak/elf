@@ -24,7 +24,7 @@ from .messages import (
 from .models import CachedGuessCheck, Guess, SubmissionResult, SubmissionStatus
 from .utils import current_aoc_year, get_unlock_status, read_guesses, resolve_session
 
-WAIT_CACHE_TTL = timedelta(minutes=15)
+WAIT_CACHE_TTL = timedelta(minutes=1)
 
 
 class AocResponseParser(HTMLParser):
