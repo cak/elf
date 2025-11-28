@@ -85,6 +85,12 @@ def get_input(year: int, day: int, session: str | None) -> str:
 
     text = response.text
 
+    if _looks_like_login_page(response):
+        raise InputFetchError(
+            "Session cookie invalid or expired. "
+            "Update AOC_SESSION with a valid 'session' cookie from your browser."
+        )
+
     input_data = text
 
     # Ensure the cache directory exists
@@ -92,3 +98,21 @@ def get_input(year: int, day: int, session: str | None) -> str:
     cache_file.write_text(input_data, encoding="utf-8")
 
     return input_data
+
+
+def _looks_like_login_page(response: httpx.Response) -> bool:
+    """
+    Detect when AoC returns the login page (often HTTP 200 with HTML) instead of input.
+    Prevents caching the login HTML as input when the session is missing/invalid.
+    """
+    content_type = response.headers.get("Content-Type", "").lower()
+    if "text/plain" in content_type:
+        return False
+
+    html = response.text
+    markers = (
+        "To play, please identify yourself",
+        "/auth/login",
+        "name=\"session\"",
+    )
+    return any(marker in html for marker in markers)
