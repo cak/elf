@@ -105,6 +105,18 @@ def submit_answer(
         MissingSessionTokenError: If no session token was provided.
         SubmissionError: If there is an issue submitting the answer.
     """
+    if not 1 <= day <= 25:
+        raise ValueError(f"Invalid day {day!r}. Advent of Code days are 1–25.")
+
+    if year < 2015:
+        raise ValueError(f"Invalid year {year!r}. Advent of Code started in 2015.")
+
+    if level not in (1, 2):
+        raise ValueError(f"Invalid level {level!r}. Puzzle parts are 1 or 2.")
+
+    if isinstance(answer, str) and not answer.strip():
+        raise ValueError("Answer cannot be empty.")
+
     if year >= CURRENT_YEAR:
         status = get_unlock_status(year, day)
         if not status.unlocked:
