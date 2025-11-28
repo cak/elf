@@ -129,15 +129,13 @@ def cli_root(
 @app.command("input")
 @handle_cli_errors
 def input_cmd(
-    year: YearArg | None = None,
-    day: DayArg | None = None,
+    year: YearArg,
+    day: DayArg,
     session: SessionOpt = None,
 ) -> None:
     """
     Fetch the input for a given year and day.
     """
-    year = year or _current_year()
-    day = day or _current_day()
     input_data = get_input(year, day, session)
     typer.echo(input_data, nl=False)
 
@@ -202,14 +200,12 @@ def leaderboard_cmd(
 @app.command("guesses")
 @handle_cli_errors
 def guesses_cmd(
-    year: YearArg | None = None,
-    day: DayArg | None = None,
+    year: YearArg,
+    day: DayArg,
 ) -> None:
     """
     Display cached guesses for a given year and day.
     """
-    year = year or _current_year()
-    day = day or _current_day()
     guesses_data = get_guesses(year, day)
     console.print(guesses_data)
 
@@ -244,8 +240,8 @@ def status_cmd(
 @app.command("open")
 @handle_cli_errors
 def open_cmd(
-    year: YearArg | None = None,
-    day: DayArg | None = None,
+    year: YearArg,
+    day: DayArg,
     kind: Annotated[
         OpenKind,
         typer.Option(
@@ -259,8 +255,6 @@ def open_cmd(
     """
     Open the puzzle page for a given year and day in the default web browser.
     """
-    year = year or _current_year()
-    day = day or _current_day()
     open_msg = open_page(year, day, kind)
     console.print(open_msg)
 
