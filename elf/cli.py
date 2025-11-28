@@ -64,10 +64,20 @@ LevelArg = Annotated[
     ),
 ]
 AnswerArg = Annotated[str, typer.Argument(help="Your answer to submit")]
-
+FormatOpt = Annotated[
+    OutputFormat,
+    typer.Option(
+        "--format",
+        "-f",
+        help="Output format: table, json, model",
+        case_sensitive=False,
+    ),
+]
 SessionOpt = Annotated[
     str | None,
     typer.Option(
+        "--session",
+        "-s",
         help="Advent of Code session cookie",
         envvar="AOC_SESSION",
     ),
@@ -99,7 +109,7 @@ def version_callback(value: bool) -> None:
 
         v = f"{__version__} (local)"
 
-    console.print(f"Advent of Code CLI {v}")
+    console.print(f"elf {v}")
     raise typer.Exit()
 
 
@@ -113,6 +123,7 @@ def cli_root(
         callback=version_callback,
         is_eager=True,
         is_flag=True,
+        expose_value=False,
     ),
     debug: bool = typer.Option(
         False,
@@ -175,15 +186,7 @@ def leaderboard_cmd(
         typer.Option(help="View key for the private leaderboard, if required"),
     ] = None,
     session: SessionOpt = None,
-    output_format: Annotated[
-        OutputFormat,
-        typer.Option(
-            "--format",
-            "-f",
-            help="Output format: table, json, model",
-            case_sensitive=False,
-        ),
-    ] = OutputFormat.TABLE,
+    output_format: FormatOpt = OutputFormat.TABLE,
 ) -> None:
     """
     Fetch and display a private leaderboard for a given year.
@@ -217,15 +220,7 @@ def guesses_cmd(
 def status_cmd(
     year: YearArg,
     session: SessionOpt = None,
-    output_format: Annotated[
-        OutputFormat,
-        typer.Option(
-            "--format",
-            "-f",
-            help="Output format: table, json, model",
-            case_sensitive=False,
-        ),
-    ] = OutputFormat.TABLE,
+    output_format: FormatOpt = OutputFormat.TABLE,
 ) -> None:
     """
     Fetch and display your Advent of Code status for a given year.
@@ -255,7 +250,7 @@ def open_cmd(
     ] = OpenKind.PUZZLE,
 ) -> None:
     """
-    Open the puzzle page for a given year and day in the default web browser.
+    Open an Advent of Code page (puzzle, input, or website) in the default web browser.
     """
     open_msg = open_page(year, day, kind)
     console.print(open_msg)
