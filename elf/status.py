@@ -60,7 +60,10 @@ def get_status(
     logged_in = parse_login_state(response.text)
 
     if not logged_in:
-        raise MissingSessionTokenError()
+        raise InputFetchError(
+            "Session cookie invalid or expired. "
+            "Update AOC_SESSION with a valid 'session' cookie from your browser."
+        )
 
     try:
         year_status = parse_year_status(response.text)
