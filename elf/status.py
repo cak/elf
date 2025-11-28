@@ -1,6 +1,7 @@
 import json
 import re
 
+import httpx
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 from rich.table import Table
@@ -25,7 +26,16 @@ def get_status(
         raise ValueError(f"Invalid year {year!r}. Advent of Code started in 2015.")
 
     with AOCClient(session_token=session) as client:
-        response = client.fetch_event(year)
+        try:
+            response = client.fetch_event(year)
+        except httpx.TimeoutException as exc:
+            raise InputFetchError(
+                "Timed out while fetching status. Try again or check your network."
+            ) from exc
+        except httpx.RequestError as exc:
+            raise InputFetchError(
+                f"Network error while connecting to Advent of Code: {exc}"
+            ) from exc
 
     if response.status_code == 404:
         raise InputFetchError(f"Event page not found for year={year} (HTTP 404).")
@@ -34,6 +44,23 @@ def get_status(
         raise InputFetchError(
             "Bad request (HTTP 400). Your session token may be invalid."
         )
+
+    if 500 <= response.status_code < 600:
+        raise InputFetchError(
+            f"Server error from Advent of Code (HTTP {response.status_code})."
+        )
+
+    try:
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        raise InputFetchError(
+            f"Unexpected HTTP error: {exc.response.status_code}."
+        ) from exc
+
+    logged_in = parse_login_state(response.text)
+
+    if not logged_in:
+        raise MissingSessionTokenError()
 
     year_status = parse_year_status(response.text)
 
@@ -210,3 +237,18 @@ def build_year_status_table(status: YearStatus) -> Table:
         table.add_row(str(day.day), stars_str, style=row_style)
 
     return table
+
+
+def parse_login_state(html: str) -> bool:
+    """
+    Returns True if user is logged in.
+    """
+    has_login = "/auth/login" in html
+    has_settings = "/settings" in html
+
+    # Logged in = settings visible AND login missing
+    if has_settings and not has_login:
+        return True
+
+    # Otherwise assume logged out
+    return False

@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timezone
 
+import httpx
 from rich.table import Table
 
 from .aoc_client import AOCClient
@@ -25,13 +26,28 @@ def get_leaderboard(
         view_key: The view key for the private leaderboard, if required.
     """
 
-    if view_key is not None and not session:
-        raise MissingSessionTokenError(env_var="AOC_SESSION")
-    else:
-        session = session or ""
+    if year < 2015:
+        raise ValueError(f"Invalid year {year!r}. Advent of Code started in 2015.")
 
-    with AOCClient(session_token=session) as client:
-        response = client.fetch_leaderboard(year, board_id, view_key)
+    if board_id <= 0:
+        raise ValueError("Board ID must be a positive integer.")
+
+    # view_key access should work without requiring a session token
+    if not session and not view_key:
+        raise MissingSessionTokenError(env_var="AOC_SESSION")
+    session = session or ""
+
+    try:
+        with AOCClient(session_token=session) as client:
+            response = client.fetch_leaderboard(year, board_id, view_key)
+    except httpx.TimeoutException as exc:
+        raise InputFetchError(
+            "Timed out while fetching leaderboard. Try again or check your network."
+        ) from exc
+    except httpx.RequestError as exc:
+        raise InputFetchError(
+            f"Network error while connecting to Advent of Code: {exc}"
+        ) from exc
 
     if response.status_code == 404:
         raise InputFetchError(
@@ -42,6 +58,18 @@ def get_leaderboard(
         raise InputFetchError(
             "Bad request (HTTP 400). Your session token or view key may be invalid."
         )
+
+    if 500 <= response.status_code < 600:
+        raise InputFetchError(
+            f"Server error from Advent of Code (HTTP {response.status_code})."
+        )
+
+    try:
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        raise InputFetchError(
+            f"Unexpected HTTP error: {exc.response.status_code}."
+        ) from exc
 
     match fmt:
         case OutputFormat.MODEL:
