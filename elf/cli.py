@@ -27,20 +27,24 @@ app = typer.Typer(
 console = Console()
 error_console = Console(stderr=True)
 
-_today = datetime.now(tz=AOC_TZ)
-THIS_YEAR = _today.year
-THIS_DAY = min(_today.day, 25) if _today.month == 12 else 1
+
+def _current_year() -> int:
+    return datetime.now(tz=AOC_TZ).year
+
+
+def _current_day() -> int:
+    today = datetime.now(tz=AOC_TZ)
+    return min(today.day, 25) if today.month == 12 else 1
 
 YearArg = Annotated[
-    int,
+    int | None,
     typer.Argument(
         help="Year of the event",
         min=2015,
-        max=THIS_YEAR,
     ),
 ]
 DayArg = Annotated[
-    int,
+    int | None,
     typer.Argument(
         help="Day of the event (1–25)",
         min=1,
@@ -116,13 +120,15 @@ def cli_root(
 @app.command("input")
 @handle_cli_errors
 def input_cmd(
-    year: YearArg = THIS_YEAR,
-    day: DayArg = THIS_DAY,
+    year: YearArg = None,
+    day: DayArg = None,
     session: SessionOpt = None,
 ) -> None:
     """
     Fetch the input for a given year and day.
     """
+    year = year or _current_year()
+    day = day or _current_day()
     input_data = get_input(year, day, session)
     typer.echo(input_data, nl=False)
 
@@ -130,18 +136,17 @@ def input_cmd(
 @app.command("answer")
 @handle_cli_errors
 def answer_cmd(
-    year: YearArg = THIS_YEAR,
-    day: DayArg = THIS_DAY,
+    year: YearArg = None,
+    day: DayArg = None,
     level: LevelArg = 1,
-    answer: AnswerArg = "",
+    answer: AnswerArg = ...,
     session: SessionOpt = None,
 ) -> None:
     """
     Submit an answer for a given year and day.
     """
-    if not answer:
-        error_console.print("[red]❄️ You must provide an answer to submit.[/red]")
-        raise typer.Exit(code=1)
+    year = year or _current_year()
+    day = day or _current_day()
 
     submit_result = submit_answer(
         year=year,
@@ -156,8 +161,8 @@ def answer_cmd(
 @app.command("leaderboard")
 @handle_cli_errors
 def leaderboard_cmd(
-    year: YearArg = THIS_YEAR,
-    board_id: Annotated[int, typer.Argument(help="Private leaderboard ID")] = 0,
+    year: YearArg = None,
+    board_id: Annotated[int, typer.Argument(help="Private leaderboard ID")] = ...,
     view_key: Annotated[
         str | None,
         typer.Option(help="View key for the private leaderboard, if required"),
@@ -176,6 +181,7 @@ def leaderboard_cmd(
     """
     Fetch and display a private leaderboard for a given year.
     """
+    year = year or _current_year()
     leaderboard_data = get_leaderboard(
         year=year,
         session=session,
@@ -190,12 +196,14 @@ def leaderboard_cmd(
 @app.command("guesses")
 @handle_cli_errors
 def guesses_cmd(
-    year: YearArg = THIS_YEAR,
-    day: DayArg = THIS_DAY,
+    year: YearArg = None,
+    day: DayArg = None,
 ) -> None:
     """
     Display cached guesses for a given year and day.
     """
+    year = year or _current_year()
+    day = day or _current_day()
     guesses_data = get_guesses(year, day)
     console.print(guesses_data)
 
@@ -203,7 +211,7 @@ def guesses_cmd(
 @app.command("status")
 @handle_cli_errors
 def status_cmd(
-    year: YearArg = THIS_YEAR,
+    year: YearArg = None,
     session: SessionOpt = None,
     output_format: Annotated[
         OutputFormat,
@@ -218,6 +226,7 @@ def status_cmd(
     """
     Fetch and display your Advent of Code status for a given year.
     """
+    year = year or _current_year()
     status_data = get_status(
         year=year,
         session=session,
@@ -230,8 +239,8 @@ def status_cmd(
 @app.command("open")
 @handle_cli_errors
 def open_cmd(
-    year: YearArg = THIS_YEAR,
-    day: DayArg = THIS_DAY,
+    year: YearArg = None,
+    day: DayArg = None,
     kind: Annotated[
         OpenKind,
         typer.Option(
@@ -245,6 +254,8 @@ def open_cmd(
     """
     Open the puzzle page for a given year and day in the default web browser.
     """
+    year = year or _current_year()
+    day = day or _current_day()
     open_msg = open_page(year, day, kind)
     console.print(open_msg)
 
