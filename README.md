@@ -243,7 +243,13 @@ Shows:
 - Inputs stored under: `<cache>/<year>/<day>/input.txt`
 - Guess history stored as `<cache>/<year>/<day>/guesses.csv`
 - Duplicate/high/low guesses are short‑circuited locally when possible
+- Cooldown responses are cached locally for ~60 seconds to avoid hammering AoC
+- Guardrails rely on your local guess history only (new machines/cleared cache = fresh)
 - Delete the cache directory to clear everything
+
+### Concurrency note
+
+The library reuses a process-global `httpx.Client` to keep CLI calls fast. For heavy multi-threaded usage, create separate `elf.aoc_client.AOCClient` instances per thread to avoid sharing the global session.
 
 ---
 
