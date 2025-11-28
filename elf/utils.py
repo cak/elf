@@ -1,12 +1,12 @@
 import csv
 import warnings
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 from .cache import get_cache_guess_file
 from .constants import AOC_TZ
 from .models import Guess, SubmissionStatus, UnlockStatus
 
-CURRENT_YEAR = date.today().year
+CURRENT_YEAR = datetime.now(tz=AOC_TZ).year
 
 
 def read_guesses(year: int, day: int) -> list[Guess]:
