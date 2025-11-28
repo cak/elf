@@ -6,7 +6,7 @@ import httpx
 
 
 class AOCClient:
-    def __init__(self, session_token: str) -> None:
+    def __init__(self, session_token: str | None) -> None:
         self.base_url = "https://adventofcode.com"
         self.session_token = session_token
         self._client = httpx.Client(
@@ -16,17 +16,12 @@ class AOCClient:
         )
 
     def _get(self, path: str) -> httpx.Response:
-        return self._client.get(
-            f"{self.base_url}{path}",
-            cookies={"session": self.session_token},
-        )
+        cookies = {"session": self.session_token} if self.session_token else None
+        return self._client.get(f"{self.base_url}{path}", cookies=cookies)
 
     def _post(self, path: str, data: dict[str, str]) -> httpx.Response:
-        return self._client.post(
-            f"{self.base_url}{path}",
-            data=data,
-            cookies={"session": self.session_token},
-        )
+        cookies = {"session": self.session_token} if self.session_token else None
+        return self._client.post(f"{self.base_url}{path}", data=data, cookies=cookies)
 
     def _close(self) -> None:
         self._client.close()

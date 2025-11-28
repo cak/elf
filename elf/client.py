@@ -109,7 +109,9 @@ def get_private_leaderboard(
 
     Private leaderboards allow groups to track each other's progress. This
     function fetches the leaderboard’s current state and optionally formats it
-    as a Python object, JSON string, or a human-readable representation.
+    as a Python object, JSON string, or a human-readable representation. You
+    can provide either a session token (full access) or just a view key
+    (read-only share link).
 
     Parameters
     ----------
@@ -134,13 +136,12 @@ def get_private_leaderboard(
     Raises
     ------
     MissingSessionTokenError
-        If a view key is provided but no session token is available.
+        If no session token is available and no view key is provided.
     LeaderboardFetchError
         If the leaderboard cannot be retrieved.
 
     Notes
     -----
-    - Advent of Code requires authentication **even for view-key access**.
     - The returned structure depends on ``OutputFormat``.
     """
     if year < 2015:
@@ -151,6 +152,8 @@ def get_private_leaderboard(
 
     session_token = (
         _resolve_session(session)
+        if view_key is None
+        else session or os.getenv("AOC_SESSION")
     )
     return get_leaderboard(year, session_token, board_id, view_key, fmt)
 

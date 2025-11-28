@@ -21,7 +21,7 @@ def get_leaderboard(
 
     Args:
         year: The year of the Advent of Code challenge.
-        session: Your Advent of Code session token, or None to signal missing.
+        session: Your Advent of Code session token (optional if view_key is supplied).
         board_id: The ID of the private leaderboard.
         view_key: The view key for the private leaderboard, if required.
     """
@@ -32,13 +32,13 @@ def get_leaderboard(
     if board_id <= 0:
         raise ValueError("Board ID must be a positive integer.")
 
-    # view_key access should work without requiring a session token
+    # Require auth only when no view key is supplied.
     if not session and not view_key:
         raise MissingSessionTokenError(env_var="AOC_SESSION")
-    session = session or ""
+    session_token = session or None
 
     try:
-        with AOCClient(session_token=session) as client:
+        with AOCClient(session_token=session_token) as client:
             response = client.fetch_leaderboard(year, board_id, view_key)
     except httpx.TimeoutException as exc:
         raise InputFetchError(
