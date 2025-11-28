@@ -1,12 +1,12 @@
 import csv
+import os
 import warnings
 from datetime import datetime, timezone
 
 from .cache import get_cache_guess_file
 from .constants import AOC_TZ
+from .exceptions import MissingSessionTokenError
 from .models import Guess, SubmissionStatus, UnlockStatus
-
-CURRENT_YEAR = datetime.now(tz=AOC_TZ).year
 
 
 def read_guesses(year: int, day: int) -> list[Guess]:
@@ -78,6 +78,11 @@ def read_guesses(year: int, day: int) -> list[Guess]:
     return sorted_guesses
 
 
+def current_aoc_year() -> int:
+    """Return the current year in the AoC timezone."""
+    return datetime.now(tz=AOC_TZ).year
+
+
 def get_unlock_status(year: int, day: int) -> UnlockStatus:
     """
     Return whether the given AoC puzzle is unlocked yet, based on America/New_York.
@@ -99,3 +104,14 @@ def get_unlock_status(year: int, day: int) -> UnlockStatus:
         now=now,
         unlock_time=unlock_time,
     )
+
+
+def resolve_session(session: str | None, env_var: str = "AOC_SESSION") -> str:
+    """Resolve a session token from an explicit arg or environment variable."""
+    if session:
+        return session
+    env_session = os.getenv(env_var)
+    if env_session:
+        return env_session
+
+    raise MissingSessionTokenError(env_var=env_var)

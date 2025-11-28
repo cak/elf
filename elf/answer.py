@@ -1,5 +1,5 @@
 import csv
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum, auto
 from html.parser import HTMLParser
 
@@ -7,7 +7,7 @@ import httpx
 
 from .aoc_client import AOCClient
 from .cache import get_cache_guess_file
-from .exceptions import MissingSessionTokenError, PuzzleLockedError, SubmissionError
+from .exceptions import PuzzleLockedError, SubmissionError
 from .messages import (
     get_already_completed_message,
     get_answer_too_high_message,
@@ -21,8 +21,7 @@ from .messages import (
     get_unexpected_response_message,
 )
 from .models import CachedGuessCheck, Guess, SubmissionResult, SubmissionStatus
-from .utils import current_aoc_year, get_unlock_status, read_guesses
-from .utils import resolve_session
+from .utils import current_aoc_year, get_unlock_status, read_guesses, resolve_session
 
 WAIT_CACHE_TTL = timedelta(minutes=15)
 

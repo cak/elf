@@ -9,6 +9,7 @@ from rich.table import Table
 from .aoc_client import AOCClient
 from .exceptions import LeaderboardFetchError, MissingSessionTokenError
 from .models import Leaderboard, OutputFormat
+from .utils import resolve_session
 
 
 def get_leaderboard(
@@ -35,7 +36,11 @@ def get_leaderboard(
         raise ValueError("Board ID must be a positive integer.")
 
     # Resolve session token from explicit arg or environment for consistency with other APIs.
-    session_token = session or os.getenv("AOC_SESSION")
+    session_token = (
+        resolve_session(session)
+        if view_key is None
+        else session or os.getenv("AOC_SESSION")
+    )
     if not session_token and not view_key:
         raise MissingSessionTokenError(env_var="AOC_SESSION")
 

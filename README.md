@@ -145,6 +145,7 @@ Behaviors:
 - Year and day are required to avoid accidental submissions.
 - Detects **locked puzzles** (year >= current year) and shows unlock timestamp
 - Identifies **too high / too low / duplicate** guesses from local cache
+- Caches **cooldown responses** locally for 15 minutes to avoid hammering the site
 - Writes to guess cache automatically (per part)
 
 Example errors:

@@ -1,11 +1,9 @@
-import os
-
 import httpx
 
 from .aoc_client import AOCClient
 from .cache import get_cache_input_file
-from .exceptions import InputFetchError, MissingSessionTokenError, PuzzleLockedError
-from .utils import CURRENT_YEAR, get_unlock_status
+from .exceptions import InputFetchError, PuzzleLockedError
+from .utils import current_aoc_year, get_unlock_status, resolve_session
 
 
 def get_input(year: int, day: int, session: str | None) -> str:
@@ -35,7 +33,7 @@ def get_input(year: int, day: int, session: str | None) -> str:
     if cache_file.exists():
         return cache_file.read_text(encoding="utf-8")
 
-    if year >= CURRENT_YEAR:
+    if year >= current_aoc_year():
         status = get_unlock_status(year, day)
         if not status.unlocked:
             raise PuzzleLockedError(
@@ -45,10 +43,7 @@ def get_input(year: int, day: int, session: str | None) -> str:
                 unlock_time=status.unlock_time,
             )
 
-    session_token = session or os.getenv("AOC_SESSION")
-
-    if not session_token:
-        raise MissingSessionTokenError(env_var="AOC_SESSION")
+    session_token = resolve_session(session)
 
     # --- Network layer --------------------------------------------------------
 

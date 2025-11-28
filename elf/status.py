@@ -1,5 +1,4 @@
 import json
-import os
 import re
 
 import httpx
@@ -8,22 +7,20 @@ from bs4.element import Tag
 from rich.table import Table
 
 from .aoc_client import AOCClient
-from .exceptions import MissingSessionTokenError, StatusFetchError
+from .exceptions import StatusFetchError
 from .models import DayStatus, OutputFormat, YearStatus
-from .utils import CURRENT_YEAR
+from .utils import current_aoc_year, resolve_session
 
 
 def get_status(
     year: int, session: str | None, fmt: OutputFormat
 ) -> YearStatus | str | Table:
-    session_token = session or os.getenv("AOC_SESSION")
+    session_token = resolve_session(session)
 
-    if not session_token:
-        raise MissingSessionTokenError(env_var="AOC_SESSION")
-
-    if year > CURRENT_YEAR:
+    now_year = current_aoc_year()
+    if year > now_year:
         raise ValueError(
-            f"Invalid year {year!r}. Advent of Code years are up to {CURRENT_YEAR}."
+            f"Invalid year {year!r}. Advent of Code years are up to {now_year}."
         )
     if year < 2015:
         raise ValueError(f"Invalid year {year!r}. Advent of Code started in 2015.")

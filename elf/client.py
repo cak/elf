@@ -3,11 +3,11 @@ import os
 from rich.table import Table
 
 from .answer import submit_answer
-from .exceptions import MissingSessionTokenError
 from .input import get_input
 from .leaderboard import get_leaderboard
 from .models import Leaderboard, OutputFormat, SubmissionResult
 from .status import get_status
+from .utils import resolve_session
 
 
 def get_puzzle_input(year: int, day: int, session: str | None = None) -> str:
@@ -45,7 +45,7 @@ def get_puzzle_input(year: int, day: int, session: str | None = None) -> str:
     - This function performs an authenticated HTTP request.
     - Advent of Code input pages are personalized per user.
     """
-    session_token = _resolve_session(session)
+    session_token = resolve_session(session)
     return get_input(year, day, session_token)
 
 
@@ -93,7 +93,7 @@ def submit_puzzle_answer(
     - Advent of Code enforces a submission cooldown after incorrect answers.
     - This function does **not** retry automatically.
     """
-    session_token = _resolve_session(session)
+    session_token = resolve_session(session)
     return submit_answer(year, day, part, answer, session_token)
 
 
@@ -151,7 +151,7 @@ def get_private_leaderboard(
         raise ValueError("Board ID must be a positive integer.")
 
     session_token = (
-        _resolve_session(session)
+        resolve_session(session)
         if view_key is None
         else session or os.getenv("AOC_SESSION")
     )
@@ -195,37 +195,5 @@ def get_user_status(
     - Status is parsed directly from the calendar HTML on the event page.
     - Some features (e.g., star colors) may vary between years.
     """
-    session_token = _resolve_session(session)
+    session_token = resolve_session(session)
     return get_status(year, session_token, fmt)
-
-
-def _resolve_session(session: str | None) -> str:
-    """
-    Determine which session token to use.
-
-    Resolution order:
-    1. A session explicitly provided to the function.
-    2. The ``AOC_SESSION`` environment variable.
-    3. Otherwise, an error is raised.
-
-    Parameters
-    ----------
-    session:
-        A session token or ``None``.
-
-    Returns
-    -------
-    str
-        A valid session token.
-
-    Raises
-    ------
-    MissingSessionTokenError
-        If neither ``session`` nor ``AOC_SESSION`` is available.
-    """
-    if session:
-        return session
-    env_session = os.getenv("AOC_SESSION")
-    if env_session:
-        return env_session
-    raise MissingSessionTokenError(env_var="AOC_SESSION")
