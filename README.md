@@ -152,7 +152,9 @@ Exit codes:
 
 - `0` when the answer is correct or already completed on AoC
 - `2` when AoC rate-limits you (cooldown/WAIT)
-- `1` for incorrect/too-high/too-low/unknown/duplicate guesses
+- `1` for incorrect/too-high/too-low/unknown guesses
+
+Duplicate guesses reuse cached submissions, so the exit code follows the cached result: e.g., a cached correct/completed guess still exits `0`, while cached incorrect/high/low responses return `1`.
 
 Example errors:
 
