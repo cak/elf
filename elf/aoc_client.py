@@ -10,7 +10,7 @@ class AOCClient:
         self.base_url = "https://adventofcode.com"
         self.session_token = session_token
         self._client = httpx.Client(
-            headers={"User-Agent": "elf (+https://github.com/snally-dev/elf)"},
+            headers={"User-Agent": "elf (+https://github.com/cak/elf)"},
             follow_redirects=True,
             timeout=10.0,
         )
