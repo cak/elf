@@ -62,7 +62,10 @@ def get_status(
     if not logged_in:
         raise MissingSessionTokenError()
 
-    year_status = parse_year_status(response.text)
+    try:
+        year_status = parse_year_status(response.text)
+    except Exception as exc:
+        raise InputFetchError("Failed to parse Advent of Code status page.") from exc
 
     match fmt:
         case OutputFormat.MODEL:
