@@ -191,8 +191,6 @@ def leaderboard_cmd(
     """
     Fetch and display a private leaderboard for a given year.
     """
-    year = year or _current_year()
-
     leaderboard_data = get_leaderboard(
         year=year,
         session=session,
@@ -222,7 +220,7 @@ def guesses_cmd(
 @app.command("status")
 @handle_cli_errors
 def status_cmd(
-    year: YearArg | None = None,
+    year: YearArg,
     session: SessionOpt = None,
     output_format: Annotated[
         OutputFormat,
@@ -237,7 +235,6 @@ def status_cmd(
     """
     Fetch and display your Advent of Code status for a given year.
     """
-    year = year or _current_year()
     status_data = get_status(
         year=year,
         session=session,

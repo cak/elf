@@ -177,16 +177,13 @@ Time (UTC)      Guess  Status
 Fetch private leaderboards. Provide a view key for read-only access or a session cookie for authenticated access. A view key is the read-only share token you can generate on your AoC leaderboard page.
 
 ```sh
-Usage: elf leaderboard [YEAR] [BOARD_ID]
+Usage: elf leaderboard YEAR BOARD_ID
 
 Options:
   --view-key TEXT
   --session TEXT
   --format table|json|model
 ```
-
-Defaults:
-- `year`: current year if omitted
 
 Supports:
 
