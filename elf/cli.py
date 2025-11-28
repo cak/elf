@@ -107,7 +107,7 @@ def input_cmd(
     Fetch the input for a given year and day.
     """
     input_data = get_input(year, day, session)
-    console.print(input_data, end="")  # preserve AoC input as-is
+    typer.echo(input_data, nl=False)
 
 
 @app.command("answer")
