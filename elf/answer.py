@@ -19,6 +19,7 @@ from .messages import (
     get_incorrect_answer_message,
     get_recent_submission_message,
     get_unexpected_response_message,
+    get_wrong_level_message,
 )
 from .models import CachedGuessCheck, Guess, SubmissionResult, SubmissionStatus
 from .utils import current_aoc_year, get_unlock_status, read_guesses, resolve_session
@@ -58,6 +59,7 @@ class AocMessageType(Enum):
     RECENT_SUBMISSION = auto()
     ALREADY_COMPLETED = auto()
     INCORRECT = auto()
+    WRONG_LEVEL = auto()
     UNEXPECTED = auto()
 
 
@@ -71,6 +73,7 @@ def classify_message(content: str) -> AocMessageType:
         ("too low", AocMessageType.TOO_LOW),
         ("You gave an answer too recently", AocMessageType.RECENT_SUBMISSION),
         ("Did you already complete it", AocMessageType.ALREADY_COMPLETED),
+        ("You don't seem to be solving the right level", AocMessageType.WRONG_LEVEL),
         ("That's not the right answer", AocMessageType.INCORRECT),
     ]
 
@@ -241,6 +244,9 @@ def submit_to_aoc(
         case AocMessageType.ALREADY_COMPLETED:
             message = get_already_completed_message()
             status = SubmissionStatus.COMPLETED
+        case AocMessageType.WRONG_LEVEL:
+            message = get_wrong_level_message()
+            status = SubmissionStatus.INCORRECT
         case AocMessageType.INCORRECT:
             message = get_incorrect_answer_message(answer)
             status = SubmissionStatus.INCORRECT

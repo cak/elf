@@ -41,6 +41,11 @@ def get_incorrect_answer_message(answer: int | str) -> str:
     return f"{answer} is not correct."
 
 
+def get_wrong_level_message() -> str:
+    """When AoC says the submission is for the wrong puzzle level."""
+    return "You don't seem to be solving the right level. Double-check the part number."
+
+
 def get_unexpected_response_message() -> str:
     """When the AoC server responds with something the tool didn’t expect."""
     return "Received an unexpected response from Advent of Code. Check the website for details."
