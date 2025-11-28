@@ -1,4 +1,5 @@
 import csv
+import warnings
 from datetime import date, datetime, timezone
 
 from .cache import get_cache_guess_file
@@ -14,36 +15,67 @@ def read_guesses(year: int, day: int) -> list[Guess]:
         return []
 
     guesses: list[Guess] = []
+    skipped_rows = 0
 
     try:
         with cache_file.open("r", newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                status = SubmissionStatus[row.get("status", "UNKNOWN")]
-                guess_raw = row.get("guess", "")
-
                 try:
-                    guess_val: int | str = int(guess_raw)
-                except ValueError:
-                    guess_val = guess_raw
-
-                try:
-                    timestamp = datetime.fromisoformat(row["timestamp"])
-                except Exception:
-                    timestamp = datetime.now(timezone.utc)
-
-                guesses.append(
-                    Guess(
-                        timestamp=timestamp,
-                        part=int(row["part"]),
-                        guess=guess_val,
-                        status=status,
+                    status_raw = (row.get("status") or "UNKNOWN").upper()
+                    status = SubmissionStatus.__members__.get(
+                        status_raw, SubmissionStatus.UNKNOWN
                     )
-                )
+
+                    guess_raw = row.get("guess", "")
+                    if isinstance(guess_raw, str) and guess_raw.lstrip("+-").isdigit():
+                        guess_val: int | str = int(guess_raw)
+                    else:
+                        guess_val = guess_raw
+
+                    timestamp_raw = row.get("timestamp", "") or ""
+                    try:
+                        if timestamp_raw:
+                            timestamp = datetime.fromisoformat(timestamp_raw)
+                            # Normalize to tz-aware (assume UTC if missing)
+                            if timestamp.tzinfo is None:
+                                timestamp = timestamp.replace(tzinfo=timezone.utc)
+                        else:
+                            timestamp = datetime.now(timezone.utc)
+                    except Exception:
+                        timestamp = datetime.now(timezone.utc)
+
+                    part_raw = row.get("part")
+                    if part_raw is None:
+                        raise ValueError("Missing part column")
+
+                    guesses.append(
+                        Guess(
+                            timestamp=timestamp,
+                            part=int(part_raw),
+                            guess=guess_val,
+                            status=status,
+                        )
+                    )
+                except Exception:
+                    skipped_rows += 1
+                    continue
     except Exception as exc:
         raise RuntimeError(f"Failed reading guess cache {cache_file}: {exc}") from exc
 
-    return guesses
+    if skipped_rows:
+        warnings.warn(
+            f"Skipped {skipped_rows} malformed guess cache rows in {cache_file}.",
+            RuntimeWarning,
+            stacklevel=1,
+        )
+
+    sorted_guesses = sorted(
+        guesses,
+        key=lambda g: (g.timestamp, g.part, str(g.guess)),
+    )
+
+    return sorted_guesses
 
 
 def get_unlock_status(year: int, day: int) -> UnlockStatus:
