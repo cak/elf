@@ -6,7 +6,7 @@ from types import TracebackType
 
 import httpx
 
-from .__init__ import __version__
+from .constants import VERSION
 
 _shared_client: httpx.Client | None = None
 
@@ -16,7 +16,7 @@ def _get_http_client() -> httpx.Client:
     global _shared_client
     if _shared_client is None:
         _shared_client = httpx.Client(
-            headers={"User-Agent": f"elf/{__version__} (+https://github.com/cak/elf)"},
+            headers={"User-Agent": f"elf/{VERSION} (+https://github.com/cak/elf)"},
             follow_redirects=True,
             timeout=httpx.Timeout(connect=5.0, read=15.0, write=10.0, pool=20.0),
             limits=httpx.Limits(max_keepalive_connections=10, max_connections=20),
