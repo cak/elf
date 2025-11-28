@@ -118,12 +118,12 @@ def get_private_leaderboard(
     year:
         The event year.
     session:
-        A session token. Required unless ``view_key`` is ``None``.
+        A session token. Required only when ``view_key`` is not provided.
     board_id:
         The numeric ID of the private leaderboard.
     view_key:
-        The read-only “share code” for the leaderboard. If provided, a valid
-        session token is still required by Advent of Code.
+        The read-only “share code” for the leaderboard. When present, a session
+        token is optional.
     fmt:
         The desired output format (``MODEL`` | ``JSON`` | ``TABLE``).
 
