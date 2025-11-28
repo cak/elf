@@ -1,17 +1,24 @@
-# elf — Advent of Code helper for Python
+# elf: Advent of Code helper for Python
 
 <p align="center">
   <img src="https://snally.com/assets/elf-logo.png" width="200" alt="elf logo">
 </p>
 
-A fast, modern Advent of Code CLI with caching, guardrails, leaderboards, and a lightweight Python API.  
+A fast, modern Advent of Code CLI with caching, guardrails, leaderboards, and a lightweight Python API.
+
 Works on macOS, Linux, and Windows. Most networked commands require an AoC session cookie (`AOC_SESSION`).
 
 ![PyPI](https://img.shields.io/pypi/v/elf.svg) ![License: MIT](https://img.shields.io/badge/License-MIT-success.svg) ![AoC Ready](https://img.shields.io/badge/Advent%20of%20Code-Ready-00cc66?logo=data:image/png;base64,<tiny_pixel_icon>) ![North Pole API Compliant](https://img.shields.io/badge/North%20Pole%20API-Compliant-blue)
 
-Fetch and cache puzzle inputs, submit answers with guardrails, inspect private leaderboards, and track your yearly progress from a single CLI or a lightweight Python API.
+## Why I Built This
 
-Works on macOS, Linux, and Windows. Networked commands usually require an AoC session cookie (`AOC_SESSION` env var or `--session`), but private leaderboards also work with just a view key.
+Advent of Code has become one of my favorite Christmas traditions. I am never the fastest solver, and some puzzles definitely keep me humble, but the challenges always spark new ideas and mark the start of the holiday season for me.
+
+Thank you to **Eric Wastl**, the creator of [Advent of Code](https://adventofcode.com/). His work brings an incredible community together every December and inspires people around the world to learn, explore new ideas, and enjoy the joy of programming puzzles.
+
+After refining a small helper tool I have used personally for the past few years, I decided to turn it into a package others can benefit from as well. I originally built an early version for my own workflows in [my personal AoC repo](https://github.com/cak/advent-of-code/tree/dc9c02a5a77a36b725a8e01cff18a6de46e0db0d?tab=readme-ov-file#%EF%B8%8F-automating-tasks-with-the-elf-cli).
+
+If Advent of Code is part of your December ritual too, I hope this little elf makes the journey smoother, more fun, and a bit more magical.
 
 ## Highlights
 
@@ -20,10 +27,60 @@ Works on macOS, Linux, and Windows. Networked commands usually require an AoC se
 - Private leaderboards as **tables**, **JSON**, or **Pydantic models**
 - **Status calendar** (table, JSON, or model) with AoC++ badge support
 - Guess history viewer (per part) built in
-- `elf open` opens puzzle, input, or main AoC pages
+- `elf open` opens puzzle, input, or main AoC pages.
 - CLI (`elf ...`) and importable library (`import elf`)
 
-## Full CLI Documentation
+## Installation
+
+### Using uv (recommended)
+
+#### Install as tool
+
+```bash
+uv tool install elf
+```
+
+#### Inside a project
+
+```sh
+uv add elf
+```
+
+### Using pip
+
+```bash
+pip install elf
+```
+
+### Requirements
+
+- Python 3.11 or newer
+- An Advent of Code account
+- `AOC_SESSION` cookie set in your environment for most commands
+
+## Configure your AoC Session
+
+Most features in elf require your Advent of Code session cookie so the CLI can access your personal puzzle inputs and progress.
+
+To get it:
+
+1. Log in to https://adventofcode.com using GitHub, Google, or Reddit.
+2. Open your browser’s developer tools.
+   - Chrome: View → Developer → Developer Tools
+   - Firefox: Tools → Browser Tools → Web Developer Tools
+3. Go to the **Application** (Chrome) or **Storage** (Firefox) tab.
+4. Look for **Cookies** for the domain `adventofcode.com`.
+5. Find the cookie named **`session`**.
+6. Copy the value (a long hex string).
+7. Set it as an environment variable:
+
+```bash
+export AOC_SESSION="your-session-token"
+```
+
+Most commands require this. You can also pass it via `--session` in the CLI or `session=` in the API.
+
+## CLI Documentation
 
 ### `elf --help`
 
@@ -34,6 +91,7 @@ Advent of Code CLI
 
 Options:
   --version, -V
+  --debug
   --install-completion
   --show-completion
   --help
@@ -47,6 +105,8 @@ Commands:
   open         Open puzzle/input/website
   cache        Show cache information
 ```
+
+Enable detailed tracebacks with `--debug` or `ELF_DEBUG=1` when troubleshooting.
 
 ---
 
@@ -66,7 +126,7 @@ Options:
 Defaults:
 
 - `year`: current year
-- `day`: today (capped at 25)
+- `day`: current day in December, otherwise 1 (Dec 1)
 - Caches to `~/.cache/elf/<year>/<day>/input.txt` (or platform equivalent)
 
 ### `elf answer`
@@ -173,7 +233,7 @@ Shows:
 
 ## Caching Behavior
 
-- Default cache dir: macOS/Linux `~/.cache/elf`, Windows `%LOCALAPPDATA%\\elf`
+- Default cache dir: macOS/Linux `~/.cache/elf`, Windows `%LOCALAPPDATA%\elf`
 - Override location with `ELF_CACHE_DIR` (respects `XDG_CACHE_HOME` on Linux)
 - Inputs stored under: `<cache>/<year>/<day>/input.txt`
 - Guess history stored as `<cache>/<year>/<day>/guesses.csv`
@@ -239,7 +299,8 @@ Model format (Pydantic):
 
 ```python
 lb = get_private_leaderboard(2024, board_id=3982840, fmt=OutputFormat.MODEL)
-print(lb.entries[0].name, lb.entries[0].stars)
+members = sorted(lb.members.values(), key=lambda m: (-m.local_score, -m.stars))
+print(members[0].name, members[0].stars)
 ```
 
 ### Status Example
