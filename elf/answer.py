@@ -85,7 +85,6 @@ def submit_answer(
     level: int,
     answer: int | str,
     session: str | None,
-    festive: bool = True,
 ) -> SubmissionResult:
     """
     Submit an answer for a specific Advent of Code day/part, with guess caching.
@@ -146,7 +145,7 @@ def submit_answer(
                 is_cached=True,
             )
 
-    return submit_to_aoc(year, day, level, answer, session, festive=festive)
+    return submit_to_aoc(year, day, level, answer, session)
 
 
 def submit_to_aoc(
@@ -155,7 +154,6 @@ def submit_to_aoc(
     level: int,
     answer: int | str,
     session_token: str,
-    festive: bool,
 ) -> SubmissionResult:
     # --- Network layer --------------------------------------------------------
 
@@ -220,25 +218,25 @@ def submit_to_aoc(
             message = "Answer submitted, but no response message found."
             status = SubmissionStatus.UNKNOWN
         case AocMessageType.CORRECT:
-            message = get_correct_answer_message(answer, festive=festive)
+            message = get_correct_answer_message(answer)
             status = SubmissionStatus.CORRECT
         case AocMessageType.TOO_HIGH:
-            message = get_answer_too_high_message(answer, festive=festive)
+            message = get_answer_too_high_message(answer)
             status = SubmissionStatus.TOO_HIGH
         case AocMessageType.TOO_LOW:
-            message = get_answer_too_low_message(answer, festive=festive)
+            message = get_answer_too_low_message(answer)
             status = SubmissionStatus.TOO_LOW
         case AocMessageType.RECENT_SUBMISSION:
-            message = get_recent_submission_message(festive=festive)
+            message = get_recent_submission_message()
             status = SubmissionStatus.WAIT
         case AocMessageType.ALREADY_COMPLETED:
-            message = get_already_completed_message(festive=festive)
+            message = get_already_completed_message()
             status = SubmissionStatus.COMPLETED
         case AocMessageType.INCORRECT:
-            message = get_incorrect_answer_message(answer, festive=festive)
+            message = get_incorrect_answer_message(answer)
             status = SubmissionStatus.INCORRECT
         case _:
-            message = get_unexpected_response_message(festive=festive)
+            message = get_unexpected_response_message()
             status = SubmissionStatus.UNKNOWN
 
     # Cache the guess unless retry needed
@@ -337,7 +335,7 @@ def check_cached_guesses(
             previous_guess=None,
             previous_timestamp=completed_guess.timestamp,
             status=SubmissionStatus.COMPLETED,
-            message=get_already_completed_message(festive=True),
+            message=get_already_completed_message(),
         )
 
     # Infer bounds

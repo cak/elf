@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as pkg_version
 from typing import Annotated
@@ -8,6 +8,7 @@ from rich.console import Console
 
 from .answer import submit_answer
 from .cache import get_cache_dir
+from .constants import AOC_TZ
 from .guesses import get_guesses
 from .input import get_input
 from .leaderboard import get_leaderboard
@@ -24,9 +25,9 @@ app = typer.Typer(
 console = Console()
 error_console = Console(stderr=True)
 
-_today = date.today()
+_today = datetime.now(tz=AOC_TZ)
 THIS_YEAR = _today.year
-THIS_DAY = min(_today.day, 25)
+THIS_DAY = min(_today.day, 25) if _today.month == 12 else 1
 
 YearArg = Annotated[
     int,
@@ -59,15 +60,6 @@ SessionOpt = Annotated[
     typer.Option(
         help="Advent of Code session cookie",
         envvar="AOC_SESSION",
-    ),
-]
-
-FestiveOpt = Annotated[
-    bool,
-    typer.Option(
-        "--festive",
-        help="Enable festive emoji + colored output.",
-        show_default=True,
     ),
 ]
 
@@ -124,7 +116,6 @@ def answer_cmd(
     day: DayArg = THIS_DAY,
     level: LevelArg = 1,
     answer: AnswerArg = "",
-    festive: FestiveOpt = False,
     session: SessionOpt = None,
 ) -> None:
     """
@@ -140,7 +131,6 @@ def answer_cmd(
         level=level,
         answer=answer,
         session=session,
-        festive=festive,
     )
     console.print(submit_result.message)
 
