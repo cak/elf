@@ -104,6 +104,8 @@ def submit_answer(
         MissingSessionTokenError: If no session token was provided.
         SubmissionError: If there is an issue submitting the answer.
     """
+    normalized_answer = _normalize_answer(answer)
+
     if not 1 <= day <= 25:
         raise ValueError(f"Invalid day {day!r}. Advent of Code days are 1–25.")
 
@@ -134,18 +136,18 @@ def submit_answer(
 
     # Check cached guesses before hitting network
     if cache_file.exists():
-        cached = check_cached_guesses(year, day, level, answer)
+        cached = check_cached_guesses(year, day, level, normalized_answer)
 
         if cached.status != SubmissionStatus.UNKNOWN:
             return SubmissionResult(
-                guess=answer,
+                guess=normalized_answer,
                 result=cached.status,
                 message=cached.message,
                 is_correct=cached.status == SubmissionStatus.CORRECT,
                 is_cached=True,
             )
 
-    return submit_to_aoc(year, day, level, answer, session)
+    return submit_to_aoc(year, day, level, normalized_answer, session)
 
 
 def submit_to_aoc(
@@ -370,3 +372,22 @@ def check_cached_guesses(
         status=SubmissionStatus.UNKNOWN,
         message="This is a unique guess.",
     )
+
+
+def _normalize_answer(answer: int | str) -> int | str:
+    """Coerce numeric strings to ints so cache guardrails can detect bounds/duplicates."""
+    if isinstance(answer, str):
+        stripped = answer.strip()
+        if not stripped:
+            raise ValueError("Answer cannot be empty.")
+
+        # Handle signed integers; non-integer strings are left as-is.
+        if stripped.lstrip("+-").isdigit():
+            try:
+                return int(stripped)
+            except ValueError:
+                return stripped
+
+        return stripped
+
+    return answer
