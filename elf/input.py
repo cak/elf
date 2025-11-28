@@ -113,6 +113,6 @@ def _looks_like_login_page(response: httpx.Response) -> bool:
     markers = (
         "To play, please identify yourself",
         "/auth/login",
-        "name=\"session\"",
+        'name="session"',
     )
     return any(marker in html for marker in markers)

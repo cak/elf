@@ -2,12 +2,12 @@ import json
 from datetime import datetime, timezone
 
 import httpx
+from pydantic import ValidationError
 from rich.table import Table
 
 from .aoc_client import AOCClient
 from .exceptions import InputFetchError, MissingSessionTokenError
 from .models import Leaderboard, OutputFormat
-from pydantic import ValidationError
 
 
 def get_leaderboard(
@@ -82,7 +82,9 @@ def get_leaderboard(
     try:
         leaderboard = Leaderboard.model_validate(payload)
     except ValidationError as exc:
-        raise InputFetchError("Unexpected leaderboard schema from Advent of Code.") from exc
+        raise InputFetchError(
+            "Unexpected leaderboard schema from Advent of Code."
+        ) from exc
 
     match fmt:
         case OutputFormat.MODEL:
