@@ -308,24 +308,25 @@ def check_cached_guesses(
         if g.part != level:
             continue
 
+        is_same_guess = g.guess == answer or (
+            numeric_answer is not None
+            and isinstance(g.guess, int)
+            and g.guess == numeric_answer
+        )
+
+        if is_same_guess:
+            return CachedGuessCheck(
+                guess=answer,
+                previous_guess=g.guess,
+                previous_timestamp=g.timestamp,
+                status=g.status,
+                message=get_cached_duplicate_message(answer, g),
+            )
+
         match g:
             # Mark that this part is completed (any previous guess)
             case Guess(status=SubmissionStatus.COMPLETED):
                 completed_guess = g
-
-            # Correct and matching
-            case Guess(guess=ans, status=SubmissionStatus.CORRECT) if ans == answer or (
-                numeric_answer is not None
-                and isinstance(ans, int)
-                and ans == numeric_answer
-            ):
-                return CachedGuessCheck(
-                    guess=answer,
-                    previous_guess=g.guess,
-                    previous_timestamp=g.timestamp,
-                    status=g.status,
-                    message=get_cached_duplicate_message(answer, g),
-                )
 
             # Bounds checking (int only)
             case Guess(guess=ans, status=SubmissionStatus.TOO_LOW) if (
