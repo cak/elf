@@ -9,7 +9,7 @@ from rich.table import Table
 from .aoc_client import AOCClient
 from .exceptions import LeaderboardFetchError, MissingSessionTokenError
 from .models import Leaderboard, OutputFormat
-from .utils import resolve_session
+from .utils import handle_http_errors, resolve_session
 
 
 def get_leaderboard(
@@ -56,27 +56,14 @@ def get_leaderboard(
             f"Network error while connecting to Advent of Code: {exc}"
         ) from exc
 
-    if response.status_code == 404:
-        raise LeaderboardFetchError(
-            f"Leaderboard not found for year={year}, board_id={board_id} (HTTP 404)."
-        )
-
-    if response.status_code == 400:
-        raise LeaderboardFetchError(
-            "Bad request (HTTP 400). Your session token or view key may be invalid."
-        )
-
-    if 500 <= response.status_code < 600:
-        raise LeaderboardFetchError(
-            f"Server error from Advent of Code (HTTP {response.status_code}). Your session token may be invalid."
-        )
-
-    try:
-        response.raise_for_status()
-    except httpx.HTTPStatusError as exc:
-        raise LeaderboardFetchError(
-            f"Unexpected HTTP error: {exc.response.status_code}."
-        ) from exc
+    handle_http_errors(
+        response,
+        exc_cls=LeaderboardFetchError,
+        not_found_message=f"Leaderboard not found for year={year}, board_id={board_id} (HTTP 404).",
+        bad_request_message="Bad request (HTTP 400). Your session token or view key may be invalid.",
+        server_error_message="Server error from Advent of Code (HTTP {status_code}). Your session token may be invalid.",
+        unexpected_status_message="Unexpected HTTP error: {status_code}.",
+    )
 
     try:
         payload = response.json()

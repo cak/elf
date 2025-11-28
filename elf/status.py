@@ -9,7 +9,7 @@ from rich.table import Table
 from .aoc_client import AOCClient
 from .exceptions import StatusFetchError
 from .models import DayStatus, OutputFormat, YearStatus
-from .utils import current_aoc_year, resolve_session
+from .utils import current_aoc_year, handle_http_errors, resolve_session
 
 
 def get_status(
@@ -37,25 +37,14 @@ def get_status(
                 f"Network error while connecting to Advent of Code: {exc}"
             ) from exc
 
-    if response.status_code == 404:
-        raise StatusFetchError(f"Event page not found for year={year} (HTTP 404).")
-
-    if response.status_code == 400:
-        raise StatusFetchError(
-            "Bad request (HTTP 400). Your session token may be invalid."
-        )
-
-    if 500 <= response.status_code < 600:
-        raise StatusFetchError(
-            f"Server error from Advent of Code (HTTP {response.status_code}). Your session token may be invalid."
-        )
-
-    try:
-        response.raise_for_status()
-    except httpx.HTTPStatusError as exc:
-        raise StatusFetchError(
-            f"Unexpected HTTP error: {exc.response.status_code}."
-        ) from exc
+    handle_http_errors(
+        response,
+        exc_cls=StatusFetchError,
+        not_found_message=f"Event page not found for year={year} (HTTP 404).",
+        bad_request_message="Bad request (HTTP 400). Your session token may be invalid.",
+        server_error_message="Server error from Advent of Code (HTTP {status_code}). Your session token may be invalid.",
+        unexpected_status_message="Unexpected HTTP error: {status_code}.",
+    )
 
     logged_in = parse_login_state(response.text)
 

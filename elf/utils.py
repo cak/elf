@@ -3,9 +3,11 @@ import os
 import warnings
 from datetime import datetime, timezone
 
+import httpx
+
 from .cache import get_cache_guess_file
 from .constants import AOC_TZ
-from .exceptions import MissingSessionTokenError
+from .exceptions import ElfError, MissingSessionTokenError
 from .models import Guess, SubmissionStatus, UnlockStatus
 
 
@@ -115,3 +117,52 @@ def resolve_session(session: str | None, env_var: str = "AOC_SESSION") -> str:
         return env_session
 
     raise MissingSessionTokenError(env_var=env_var)
+
+
+def handle_http_errors(
+    response: httpx.Response,
+    *,
+    exc_cls: type[ElfError],
+    not_found_message: str,
+    bad_request_message: str,
+    server_error_message: str,
+    unexpected_status_message: str = "Unexpected HTTP error: {status_code}.",
+) -> None:
+    """
+    Centralized HTTP status handling for AoC endpoints.
+    """
+
+    def _fmt(msg: str) -> str:
+        return msg.format(status_code=response.status_code)
+
+    if response.status_code == 404:
+        raise exc_cls(_fmt(not_found_message))
+
+    if response.status_code == 400:
+        raise exc_cls(_fmt(bad_request_message))
+
+    if 500 <= response.status_code < 600:
+        raise exc_cls(_fmt(server_error_message))
+
+    try:
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        raise exc_cls(_fmt(unexpected_status_message)) from exc
+
+
+def looks_like_login_page(response: httpx.Response) -> bool:
+    """
+    Detect when AoC returns the login page (often HTTP 200 with HTML) instead of input.
+    Prevents caching the login HTML as input when the session is missing/invalid.
+    """
+    content_type = response.headers.get("Content-Type", "").lower()
+    if "text/plain" in content_type:
+        return False
+
+    html = response.text
+    markers = (
+        "To play, please identify yourself",
+        "/auth/login",
+        'name="session"',
+    )
+    return any(marker in html for marker in markers)

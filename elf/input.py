@@ -3,7 +3,13 @@ import httpx
 from .aoc_client import AOCClient
 from .cache import get_cache_input_file
 from .exceptions import InputFetchError, PuzzleLockedError
-from .utils import current_aoc_year, get_unlock_status, resolve_session
+from .utils import (
+    current_aoc_year,
+    get_unlock_status,
+    handle_http_errors,
+    looks_like_login_page,
+    resolve_session,
+)
 
 
 def get_input(year: int, day: int, session: str | None) -> str:
@@ -62,29 +68,18 @@ def get_input(year: int, day: int, session: str | None) -> str:
         ) from exc
 
     # --- HTTP status handling -------------------------------------------------
-    if response.status_code == 404:
-        raise InputFetchError(f"Input not found for year={year}, day={day} (HTTP 404).")
-
-    if response.status_code == 400:
-        raise InputFetchError(
-            "Bad request (HTTP 400). Your session token may be invalid."
-        )
-
-    if 500 <= response.status_code < 600:
-        raise InputFetchError(
-            f"Server error from Advent of Code (HTTP {response.status_code}). Your session token may be invalid."
-        )
-
-    try:
-        response.raise_for_status()
-    except httpx.HTTPStatusError as exc:
-        raise InputFetchError(
-            f"Unexpected HTTP error: {exc.response.status_code}."
-        ) from exc
+    handle_http_errors(
+        response,
+        exc_cls=InputFetchError,
+        not_found_message=f"Input not found for year={year}, day={day} (HTTP 404).",
+        bad_request_message="Bad request (HTTP 400). Your session token may be invalid.",
+        server_error_message="Server error from Advent of Code (HTTP {status_code}). Your session token may be invalid.",
+        unexpected_status_message="Unexpected HTTP error: {status_code}.",
+    )
 
     text = response.text
 
-    if _looks_like_login_page(response):
+    if looks_like_login_page(response):
         raise InputFetchError(
             "Session cookie invalid or expired. "
             "Update AOC_SESSION with a valid 'session' cookie from your browser."
@@ -97,21 +92,3 @@ def get_input(year: int, day: int, session: str | None) -> str:
     cache_file.write_text(input_data, encoding="utf-8")
 
     return input_data
-
-
-def _looks_like_login_page(response: httpx.Response) -> bool:
-    """
-    Detect when AoC returns the login page (often HTTP 200 with HTML) instead of input.
-    Prevents caching the login HTML as input when the session is missing/invalid.
-    """
-    content_type = response.headers.get("Content-Type", "").lower()
-    if "text/plain" in content_type:
-        return False
-
-    html = response.text
-    markers = (
-        "To play, please identify yourself",
-        "/auth/login",
-        'name="session"',
-    )
-    return any(marker in html for marker in markers)
