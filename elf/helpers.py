@@ -9,17 +9,8 @@ R = TypeVar("R")
 
 
 def parse_input(input_str: str) -> list[str]:
-    """Parses the input string into a list of lines.
-
-    🎄 Splitting the input into delightful pieces! 🎁
-
-    Args:
-        input_str (str): The raw input string.
-
-    Returns:
-        list[str]: A list of input lines.
-    """
-    return input_str.strip().splitlines()
+    """Split the raw input into lines without trimming whitespace or blank rows."""
+    return input_str.splitlines()
 
 
 def timer(
