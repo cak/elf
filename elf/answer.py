@@ -311,13 +311,10 @@ def check_cached_guesses(
                 completed_guess = g
 
             # Correct and matching
-            case Guess(guess=ans, status=SubmissionStatus.CORRECT) if (
-                ans == answer
-                or (
-                    numeric_answer is not None
-                    and isinstance(ans, int)
-                    and ans == numeric_answer
-                )
+            case Guess(guess=ans, status=SubmissionStatus.CORRECT) if ans == answer or (
+                numeric_answer is not None
+                and isinstance(ans, int)
+                and ans == numeric_answer
             ):
                 return CachedGuessCheck(
                     guess=answer,
@@ -358,9 +355,7 @@ def check_cached_guesses(
     if numeric_answer is not None:
         match (highest_low, lowest_high):
             case (h_low, _) if (
-                h_low
-                and isinstance(h_low.guess, int)
-                and numeric_answer <= h_low.guess
+                h_low and isinstance(h_low.guess, int) and numeric_answer <= h_low.guess
             ):
                 return CachedGuessCheck(
                     guess=answer,
