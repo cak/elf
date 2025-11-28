@@ -200,7 +200,7 @@ def submit_to_aoc(
 
     if 500 <= response.status_code < 600:
         raise SubmissionError(
-            f"Server error from Advent of Code (HTTP {response.status_code})."
+            f"Server error from Advent of Code (HTTP {response.status_code}). Your session token may be invalid."
         )
 
     if response.status_code != 200:

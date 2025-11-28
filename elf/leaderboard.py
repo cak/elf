@@ -62,7 +62,7 @@ def get_leaderboard(
 
     if 500 <= response.status_code < 600:
         raise InputFetchError(
-            f"Server error from Advent of Code (HTTP {response.status_code})."
+            f"Server error from Advent of Code (HTTP {response.status_code}). Your session token may be invalid."
         )
 
     try:
