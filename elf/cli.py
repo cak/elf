@@ -36,6 +36,7 @@ def _current_day() -> int:
     today = datetime.now(tz=AOC_TZ)
     return min(today.day, 25) if today.month == 12 else 1
 
+
 YearArg = Annotated[
     int | None,
     typer.Argument(
@@ -139,7 +140,7 @@ def answer_cmd(
     year: YearArg = None,
     day: DayArg = None,
     level: LevelArg = 1,
-    answer: AnswerArg = ...,
+    answer: AnswerArg = "",
     session: SessionOpt = None,
 ) -> None:
     """
@@ -161,8 +162,8 @@ def answer_cmd(
 @app.command("leaderboard")
 @handle_cli_errors
 def leaderboard_cmd(
-    year: YearArg = None,
-    board_id: Annotated[int, typer.Argument(help="Private leaderboard ID")] = ...,
+    year: YearArg = _current_year(),
+    board_id: Annotated[int, typer.Argument(help="Private leaderboard ID")] = 0,
     view_key: Annotated[
         str | None,
         typer.Option(help="View key for the private leaderboard, if required"),
