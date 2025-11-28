@@ -1,65 +1,188 @@
 # elf — Advent of Code helper for Python
 
-Fetch and cache puzzle inputs, submit answers safely, inspect your private leaderboards, and track your yearly progress — from a single CLI or a small Python API.
+<p align="center">
+  <img src="https://snally.com/assets/elf-logo.png" width="200" alt="elf logo">
+</p>
+
+A fast, modern Advent of Code CLI with caching, guardrails, leaderboards, and a lightweight Python API.  
+Works on macOS, Linux, and Windows. Most networked commands require an AoC session cookie (`AOC_SESSION`).
+
+![PyPI](https://img.shields.io/pypi/v/elf.svg) ![License: MIT](https://img.shields.io/badge/License-MIT-success.svg) ![AoC Ready](https://img.shields.io/badge/Advent%20of%20Code-Ready-00cc66?logo=data:image/png;base64,<tiny_pixel_icon>) ![North Pole API Compliant](https://img.shields.io/badge/North%20Pole%20API-Compliant-blue)
+
+Fetch and cache puzzle inputs, submit answers with guardrails, inspect private leaderboards, and track your yearly progress from a single CLI or a lightweight Python API.
+
+Works on macOS, Linux, and Windows. Networked commands usually require an AoC session cookie (`AOC_SESSION` env var or `--session`), but private leaderboards also work with just a view key.
 
 ## Highlights
 
-- One-line fetch for puzzle input with **local caching** (never re-downloads)
-- **Safe submissions** with guardrails, duplicate/high/low guess detection, and cooldown awareness
-- View private leaderboards as **tables**, **JSON**, or **Pydantic models**
-- Show your **personal calendar/status** for any year
-- Optional **guess cache** to avoid re-submitting incorrect answers
-- Works as both a CLI (`elf …`) and importable library (`import elf`)
+- One-line input fetch with **local caching** (never re-downloads)
+- **Submission guardrails:** locked puzzle check, cooldown messages, and duplicate/high/low detection from cached guesses
+- Private leaderboards as **tables**, **JSON**, or **Pydantic models**
+- **Status calendar** (table, JSON, or model) with AoC++ badge support
+- Guess history viewer (per part) built in
+- `elf open` opens puzzle, input, or main AoC pages
+- CLI (`elf ...`) and importable library (`import elf`)
 
-## Installation
+## Full CLI Documentation
 
-### Using uv (recommended)
+### `elf --help`
 
-```bash
-uv tool install elf
-# or, inside a project:
-uv add elf
+```sh
+Usage: elf [OPTIONS] COMMAND [ARGS]...
+
+Advent of Code CLI
+
+Options:
+  --version, -V
+  --install-completion
+  --show-completion
+  --help
+
+Commands:
+  input        Fetch the input for a given year/day
+  answer       Submit an answer
+  leaderboard  Fetch/display a private leaderboard
+  guesses      Show cached guesses
+  status       Show yearly star status
+  open         Open puzzle/input/website
+  cache        Show cache information
 ```
 
-### Using pip
+---
 
-```bash
-pip install elf
+## Commands
+
+### `elf input`
+
+Fetch puzzle input with caching. Requires a session cookie.
+
+```sh
+Usage: elf input [YEAR] [DAY]
+
+Options:
+  --session TEXT   AOC session cookie (env: AOC_SESSION)
 ```
 
-Requirements: Python 3.11+.
+Defaults:
 
-## Configure your AoC session
+- `year`: current year
+- `day`: today (capped at 25)
+- Caches to `~/.cache/elf/<year>/<day>/input.txt` (or platform equivalent)
 
-Grab the `session` cookie from Advent of Code and set it as an environment variable:
+### `elf answer`
 
-```bash
-export AOC_SESSION="your-session-token"
+Submit an answer with safety guardrails. Requires a session cookie. Guardrails use your local guess cache to short-circuit duplicate answers and infer too-high/too-low for integer guesses.
+
+```sh
+Usage: elf answer [YEAR] [DAY] [LEVEL] [ANSWER]
+
+Options:
+  --session TEXT  AOC session cookie
 ```
 
-Most commands require this. You can also pass it via `--session` in the CLI or `session=` in the API.
+Behaviors:
 
-## CLI quickstart
+- Detects **locked puzzles** (year >= current year) and shows unlock timestamp
+- Identifies **too high / too low / duplicate** guesses from local cache
+- Writes to guess cache automatically (per part)
 
-```bash
-elf input --year 2023 --day 5                       # Print puzzle input (cached)
-elf answer --year 2023 --day 5 --level 1 "12345"    # Submit an answer
-elf leaderboard --year 2023 --board-id 123456       # Show a private leaderboard
-elf status --year 2023                              # Show your calendar/stars
-elf guesses --year 2023 --day 5                     # Inspect cached guesses
-elf open --year 2023 --day 5 --kind puzzle          # Open puzzle/input/site
-elf cache                                           # Show cache location/details
+Example errors:
+
+```sh
+❄️ Puzzle YYYY‑MM‑DD not unlocked yet
+1234 is not correct.
+You submitted an answer recently. Please wait...
+12345 is correct. Star awarded.
 ```
 
-Useful flags:
+### `elf guesses`
 
-- `--format table|json|model` for leaderboard/status output
-- `--festive / --no-festive` toggles emoji/colored responses
-- Year/day default to “today,” capped at Dec 25 of the current year
+Display local guess history (per part). Requires a cached `guesses.csv` from previous submissions.
 
-Run `elf --help` or any subcommand with `--help` for full options.
+```sh
+Usage: elf guesses [YEAR] [DAY]
+```
 
-## Library usage
+Example table:
+
+```sh
+Time (UTC)      Guess  Status
+2024‑12‑05 ...  959    too_low
+2024‑12‑05 ...  6951   correct
+```
+
+### `elf leaderboard`
+
+Fetch private leaderboards. Provide a view key for read-only access or a session cookie for authenticated access. A view key is the read-only share token you can generate on your AoC leaderboard page.
+
+```sh
+Usage: elf leaderboard [YEAR] [BOARD_ID]
+
+Options:
+  --view-key TEXT
+  --session TEXT
+  --format table|json|model
+```
+
+Supports:
+
+- **table:** pretty Rich table
+- **json:** raw JSON
+- **model:** structured Pydantic model
+
+### `elf status`
+
+View your Advent of Code star calendar. Requires a session cookie.
+
+```sh
+Usage: elf status [YEAR]
+
+Options:
+  --session TEXT
+  --format table|json|model
+```
+
+Prints stars for each day and your AoC++ badge.
+
+### `elf open`
+
+Opens puzzle pages in your browser.
+
+```sh
+Usage: elf open [YEAR] [DAY]
+
+Options:
+  --kind puzzle|input|website
+```
+
+### `elf cache`
+
+Display cache directory information.
+
+```sh
+Usage: elf cache
+```
+
+Shows:
+
+- Cache root directory (platform-aware)
+- Number of cached files
+- Reminder to delete the directory manually to clear cache
+
+---
+
+## Caching Behavior
+
+- Default cache dir: macOS/Linux `~/.cache/elf`, Windows `%LOCALAPPDATA%\\elf`
+- Override location with `ELF_CACHE_DIR` (respects `XDG_CACHE_HOME` on Linux)
+- Inputs stored under: `<cache>/<year>/<day>/input.txt`
+- Guess history stored as `<cache>/<year>/<day>/guesses.csv`
+- Duplicate/high/low guesses are short‑circuited locally when possible
+- Delete the cache directory to clear everything
+
+---
+
+## Library Usage
 
 ```python
 from elf import (
@@ -70,6 +193,7 @@ from elf import (
     OutputFormat,
 )
 
+# AOC_SESSION is used automatically if not passed explicitly
 input_text = get_puzzle_input(2023, 5)
 
 result = submit_puzzle_answer(2023, 5, 1, "12345")
@@ -83,19 +207,81 @@ status = get_user_status(2023, fmt=OutputFormat.TABLE)
 print(status)
 ```
 
-## Caching behavior
+### Puzzle Helpers
 
-- Inputs: stored under `~/.cache/elf/<year>/<day>/input.txt`  
-  (override with `ELF_CACHE_DIR`)
-- Guesses: stored as CSV per day; duplicate/high/low guesses are short-circuited locally
-- Delete the cache directory at any time to clear everything
+`elf.helpers` includes some small utilities you can use in your own AoC solutions:
 
-## Notes and tips
+```python
+from elf.helpers import parse_input, read_test_input, timer
+```
 
-- AoC puzzles unlock at **midnight America/New_York**; requests before unlock raise a friendly error.
-- View-key leaderboards still require a session cookie (per AoC rules).
-- Internal implementation uses pattern matching; Python 3.11+ required.
+### Leaderboard Example
 
-## Special Thanks to Solos
+```sh
+❯ elf leaderboard 2024 3982840
+              Advent of Code 2024 – Private Leaderboard
+┏━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓
+┃ Rank ┃ Name           ┃ Stars ┃ Local Score ┃ Last Star (UTC)     ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━┩
+│    1 │ User A         │    45 │         900 │ 2024-12-26 00:53:17 │
+│    2 │ User B         │    45 │         855 │ 2024-12-26 00:53:56 │
+│    3 │ User C         │    36 │         622 │ 2024-12-26 03:29:21 │
+└──────┴────────────────┴───────┴─────────────┴─────────────────────┘
+```
 
-Special thanks to [Solos](https://github.com/solos) for donating the `elf` package name on PyPI.
+JSON format:
+
+```sh
+elf leaderboard 2024 3982840 --format json
+```
+
+Model format (Pydantic):
+
+```python
+lb = get_private_leaderboard(2024, board_id=3982840, fmt=OutputFormat.MODEL)
+print(lb.entries[0].name, lb.entries[0].stars)
+```
+
+### Status Example
+
+```sh
+❯ elf status 2023
+Advent of Code
+  2023 – cak
+(AoC++) [34⭐]
+┏━━━━━┳━━━━━━━┓
+┃ Day ┃ Stars ┃
+┡━━━━━╇━━━━━━━┩
+│   1 │  ★★   │
+│   2 │  ★★   │
+│   3 │  ★★   │
+│   4 │  ★☆   │
+│   5 │  ★☆   │
+│   6 │  ★★   │
+│   7 │  ★★   │
+│   8 │  ★☆   │
+│   9 │  ☆☆   │
+│  10 │  ☆☆   │
+│  .. │  ..   │
+│  25 │  ☆☆   │
+└─────┴───────┘
+```
+
+JSON format:
+
+```sh
+elf status 2023 --format json
+```
+
+Model format:
+
+```python
+status = get_user_status(2023, fmt=OutputFormat.MODEL)
+print(status.days[0].day, status.days[0].stars)
+```
+
+---
+
+## Special Thanks
+
+Thanks to **Solos** for donating the `elf` PyPI name.
