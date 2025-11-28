@@ -44,7 +44,7 @@ def get_input(year: int, day: int, session: str | None) -> str:
 
     cache_file = get_cache_input_file(year, day)
     if cache_file.exists():
-        return cache_file.read_text(encoding="utf-8").rstrip()
+        return cache_file.read_text(encoding="utf-8")
 
     # --- Network layer --------------------------------------------------------
 
