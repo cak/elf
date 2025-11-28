@@ -23,6 +23,16 @@ def get_input(year: int, day: int, session: str | None) -> str:
         InputFetchError: If there is an issue fetching the puzzle input.
         ValueError: If the year/day are out of range.
     """
+    if not 1 <= day <= 25:
+        raise ValueError(f"Invalid day {day!r}. Advent of Code days are 1–25.")
+
+    if year < 2015:
+        raise ValueError(f"Invalid year {year!r}. Advent of Code started in 2015.")
+
+    cache_file = get_cache_input_file(year, day)
+    if cache_file.exists():
+        return cache_file.read_text(encoding="utf-8")
+
     if year >= CURRENT_YEAR:
         status = get_unlock_status(year, day)
         if not status.unlocked:
@@ -35,16 +45,6 @@ def get_input(year: int, day: int, session: str | None) -> str:
 
     if not session:
         raise MissingSessionTokenError(env_var="AOC_SESSION")
-
-    if not 1 <= day <= 25:
-        raise ValueError(f"Invalid day {day!r}. Advent of Code days are 1–25.")
-
-    if year < 2015:
-        raise ValueError(f"Invalid year {year!r}. Advent of Code started in 2015.")
-
-    cache_file = get_cache_input_file(year, day)
-    if cache_file.exists():
-        return cache_file.read_text(encoding="utf-8")
 
     # --- Network layer --------------------------------------------------------
 
