@@ -41,7 +41,7 @@ def _current_day() -> int:
 YearArg = Annotated[
     int,
     typer.Argument(
-        help="Year of the event",
+        help="Year of the Advent of Code event (2015 or later)",
         min=2015,
         default_factory=_current_year,
     ),
@@ -89,10 +89,16 @@ def handle_cli_errors(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except (ElfError, Exception) as exc:
+        except typer.Exit:
+            raise
+        except ElfError as exc:
             if _DEBUG:
                 raise
             error_console.print(f"[red]❄️ {exc}[/red]")
+        except Exception as exc:
+            if _DEBUG:
+                raise
+            error_console.print(f"[red]Unexpected error: {exc}[/red]")
         raise typer.Exit(code=1)
 
     return wrapper
