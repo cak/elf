@@ -12,7 +12,13 @@ _shared_client: httpx.Client | None = None
 
 
 def _get_http_client() -> httpx.Client:
-    """Return a shared httpx.Client with sane limits and timeouts."""
+    """
+    Return a process-global httpx.Client with sane limits/timeouts.
+
+    The shared client keeps connections warm for CLI calls. If you make
+    heavy concurrent requests from multiple threads, construct your own
+    AOCClient instances to avoid sharing this global session.
+    """
     global _shared_client
     if _shared_client is None:
         _shared_client = httpx.Client(
