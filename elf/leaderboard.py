@@ -7,6 +7,7 @@ from rich.table import Table
 from .aoc_client import AOCClient
 from .exceptions import InputFetchError, MissingSessionTokenError
 from .models import Leaderboard, OutputFormat
+from pydantic import ValidationError
 
 
 def get_leaderboard(
@@ -71,21 +72,30 @@ def get_leaderboard(
             f"Unexpected HTTP error: {exc.response.status_code}."
         ) from exc
 
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise InputFetchError(
+            "Failed to decode leaderboard JSON. Your session/view key may be invalid."
+        ) from exc
+
+    try:
+        leaderboard = Leaderboard.model_validate(payload)
+    except ValidationError as exc:
+        raise InputFetchError("Unexpected leaderboard schema from Advent of Code.") from exc
+
     match fmt:
         case OutputFormat.MODEL:
-            leaderboard = Leaderboard.model_validate(response.json())
             return leaderboard
         case OutputFormat.JSON:
-            json_str = json.dumps(response.json(), indent=2)
-            return json_str
+            return json.dumps(payload, indent=2)
         case OutputFormat.TABLE:
-            return format_leaderboard_as_table(response.json())
+            return format_leaderboard_as_table(leaderboard)
         case _:
             raise ValueError(f"Unsupported output format: {fmt}")
 
 
-def format_leaderboard_as_table(leaderboard_json: dict[str, object]) -> Table:
-    leaderboard = Leaderboard.model_validate(leaderboard_json)
+def format_leaderboard_as_table(leaderboard: Leaderboard) -> Table:
     table = Table(title=f"Advent of Code {leaderboard.event} – Private Leaderboard")
 
     table.add_column("Rank", justify="right", style="bold")
