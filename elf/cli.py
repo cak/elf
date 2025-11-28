@@ -43,6 +43,7 @@ YearArg = Annotated[
     typer.Argument(
         help="Year of the event",
         min=2015,
+        default_factory=_current_year,
     ),
 ]
 DayArg = Annotated[
@@ -51,6 +52,7 @@ DayArg = Annotated[
         help="Day of the event (1–25)",
         min=1,
         max=25,
+        default_factory=_current_day,
     ),
 ]
 LevelArg = Annotated[
