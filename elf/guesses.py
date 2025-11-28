@@ -5,6 +5,7 @@ from rich.table import Table
 from rich.text import Text
 
 from .cache import get_cache_guess_file
+from .exceptions import ElfError
 from .models import Guess, SubmissionStatus
 from .utils import read_guesses
 
@@ -12,7 +13,10 @@ from .utils import read_guesses
 def get_guesses(year: int, day: int) -> Group:
     cache_file = get_cache_guess_file(year, day)
     if not cache_file.exists():
-        raise FileNotFoundError(f"No cached guesses found at {cache_file}")
+        raise ElfError(
+            f"No cached guesses found yet for {year}-12-{day:02d}. "
+            "Submit an answer before viewing guess history."
+        )
     cached_guesses = read_guesses(year, day)
 
     return render_guess_tables(cached_guesses)
