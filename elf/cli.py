@@ -39,14 +39,14 @@ def _current_day() -> int:
 
 
 YearArg = Annotated[
-    int | None,
+    int,
     typer.Argument(
         help="Year of the event",
         min=2015,
     ),
 ]
 DayArg = Annotated[
-    int | None,
+    int,
     typer.Argument(
         help="Day of the event (1–25)",
         min=1,
@@ -132,8 +132,8 @@ def cli_root(
 @app.command("input")
 @handle_cli_errors
 def input_cmd(
-    year: YearArg = None,
-    day: DayArg = None,
+    year: YearArg | None = None,
+    day: DayArg | None = None,
     session: SessionOpt = None,
 ) -> None:
     """
@@ -157,9 +157,6 @@ def answer_cmd(
     """
     Submit an answer for a given year and day.
     """
-    year = year or _current_year()
-    day = day or _current_day()
-    level = level or 1
 
     submit_result = submit_answer(
         year=year,
@@ -210,8 +207,8 @@ def leaderboard_cmd(
 @app.command("guesses")
 @handle_cli_errors
 def guesses_cmd(
-    year: YearArg = None,
-    day: DayArg = None,
+    year: YearArg | None = None,
+    day: DayArg | None = None,
 ) -> None:
     """
     Display cached guesses for a given year and day.
@@ -225,7 +222,7 @@ def guesses_cmd(
 @app.command("status")
 @handle_cli_errors
 def status_cmd(
-    year: YearArg = None,
+    year: YearArg,
     session: SessionOpt = None,
     output_format: Annotated[
         OutputFormat,
@@ -253,8 +250,8 @@ def status_cmd(
 @app.command("open")
 @handle_cli_errors
 def open_cmd(
-    year: YearArg = None,
-    day: DayArg = None,
+    year: YearArg | None = None,
+    day: DayArg | None = None,
     kind: Annotated[
         OpenKind,
         typer.Option(
