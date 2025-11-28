@@ -104,7 +104,7 @@ def submit_answer(
         MissingSessionTokenError: If no session token was provided.
         SubmissionError: If there is an issue submitting the answer.
     """
-    normalized_answer = _normalize_answer(answer)
+    submission_answer, numeric_answer = _normalize_answer(answer)
 
     if not 1 <= day <= 25:
         raise ValueError(f"Invalid day {day!r}. Advent of Code days are 1–25.")
@@ -136,18 +136,24 @@ def submit_answer(
 
     # Check cached guesses before hitting network
     if cache_file.exists():
-        cached = check_cached_guesses(year, day, level, normalized_answer)
+        cached = check_cached_guesses(
+            year=year,
+            day=day,
+            level=level,
+            answer=submission_answer,
+            numeric_answer=numeric_answer,
+        )
 
         if cached.status != SubmissionStatus.UNKNOWN:
             return SubmissionResult(
-                guess=normalized_answer,
+                guess=submission_answer,
                 result=cached.status,
                 message=cached.message,
                 is_correct=cached.status == SubmissionStatus.CORRECT,
                 is_cached=True,
             )
 
-    return submit_to_aoc(year, day, level, normalized_answer, session)
+    return submit_to_aoc(year, day, level, submission_answer, session)
 
 
 def submit_to_aoc(
@@ -287,6 +293,7 @@ def check_cached_guesses(
     day: int,
     level: int,
     answer: int | str,
+    numeric_answer: int | None,
 ) -> CachedGuessCheck:
     guesses = read_guesses(year, day)
 
@@ -304,7 +311,14 @@ def check_cached_guesses(
                 completed_guess = g
 
             # Correct and matching
-            case Guess(guess=ans, status=SubmissionStatus.CORRECT) if ans == answer:
+            case Guess(guess=ans, status=SubmissionStatus.CORRECT) if (
+                ans == answer
+                or (
+                    numeric_answer is not None
+                    and isinstance(ans, int)
+                    and ans == numeric_answer
+                )
+            ):
                 return CachedGuessCheck(
                     guess=answer,
                     previous_guess=g.guess,
@@ -314,17 +328,17 @@ def check_cached_guesses(
                 )
 
             # Bounds checking (int only)
-            case Guess(guess=ans, status=SubmissionStatus.TOO_LOW) if isinstance(
-                ans, int
-            ) and isinstance(answer, int):
+            case Guess(guess=ans, status=SubmissionStatus.TOO_LOW) if (
+                numeric_answer is not None and isinstance(ans, int)
+            ):
                 if highest_low is None or (
                     isinstance(highest_low.guess, int) and ans > highest_low.guess
                 ):
                     highest_low = g
 
-            case Guess(guess=ans, status=SubmissionStatus.TOO_HIGH) if isinstance(
-                ans, int
-            ) and isinstance(answer, int):
+            case Guess(guess=ans, status=SubmissionStatus.TOO_HIGH) if (
+                numeric_answer is not None and isinstance(ans, int)
+            ):
                 if lowest_high is None or (
                     isinstance(lowest_high.guess, int) and ans < lowest_high.guess
                 ):
@@ -341,10 +355,12 @@ def check_cached_guesses(
         )
 
     # Infer bounds
-    if isinstance(answer, int):
+    if numeric_answer is not None:
         match (highest_low, lowest_high):
             case (h_low, _) if (
-                h_low and isinstance(h_low.guess, int) and answer <= h_low.guess
+                h_low
+                and isinstance(h_low.guess, int)
+                and numeric_answer <= h_low.guess
             ):
                 return CachedGuessCheck(
                     guess=answer,
@@ -354,7 +370,9 @@ def check_cached_guesses(
                     message=get_cached_low_message(answer, h_low),
                 )
             case (_, l_high) if (
-                l_high and isinstance(l_high.guess, int) and answer >= l_high.guess
+                l_high
+                and isinstance(l_high.guess, int)
+                and numeric_answer >= l_high.guess
             ):
                 return CachedGuessCheck(
                     guess=answer,
@@ -374,20 +392,23 @@ def check_cached_guesses(
     )
 
 
-def _normalize_answer(answer: int | str) -> int | str:
-    """Coerce numeric strings to ints so cache guardrails can detect bounds/duplicates."""
+def _normalize_answer(answer: int | str) -> tuple[int | str, int | None]:
+    """
+    Preserve the user's answer text but still provide a numeric variant for bounds/duplicate guardrails.
+    Returns (submission_answer, numeric_answer).
+    """
     if isinstance(answer, str):
         stripped = answer.strip()
         if not stripped:
             raise ValueError("Answer cannot be empty.")
 
-        # Handle signed integers; non-integer strings are left as-is.
+        numeric_value: int | None = None
         if stripped.lstrip("+-").isdigit():
             try:
-                return int(stripped)
+                numeric_value = int(stripped)
             except ValueError:
-                return stripped
+                numeric_value = None
 
-        return stripped
+        return stripped, numeric_value
 
-    return answer
+    return answer, int(answer)
