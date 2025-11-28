@@ -1,4 +1,5 @@
 import csv
+import os
 from datetime import datetime, timezone
 from enum import Enum, auto
 from html.parser import HTMLParser
@@ -128,7 +129,9 @@ def submit_answer(
                 unlock_time=status.unlock_time,
             )
 
-    if not session:
+    session_token = session or os.getenv("AOC_SESSION")
+
+    if not session_token:
         raise MissingSessionTokenError(env_var="AOC_SESSION")
 
     cache_file = get_cache_guess_file(year, day)
@@ -153,7 +156,7 @@ def submit_answer(
                 is_cached=True,
             )
 
-    return submit_to_aoc(year, day, level, submission_answer, session)
+    return submit_to_aoc(year, day, level, submission_answer, session_token)
 
 
 def submit_to_aoc(

@@ -1,4 +1,5 @@
 import json
+import os
 import re
 
 import httpx
@@ -15,7 +16,9 @@ from .utils import CURRENT_YEAR
 def get_status(
     year: int, session: str | None, fmt: OutputFormat
 ) -> YearStatus | str | Table:
-    if not session:
+    session_token = session or os.getenv("AOC_SESSION")
+
+    if not session_token:
         raise MissingSessionTokenError(env_var="AOC_SESSION")
 
     if year > CURRENT_YEAR:
@@ -25,7 +28,7 @@ def get_status(
     if year < 2015:
         raise ValueError(f"Invalid year {year!r}. Advent of Code started in 2015.")
 
-    with AOCClient(session_token=session) as client:
+    with AOCClient(session_token=session_token) as client:
         try:
             response = client.fetch_event(year)
         except httpx.TimeoutException as exc:

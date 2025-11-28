@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime, timezone
 
 import httpx
@@ -33,10 +34,10 @@ def get_leaderboard(
     if board_id <= 0:
         raise ValueError("Board ID must be a positive integer.")
 
-    # Require auth only when no view key is supplied.
-    if not session and not view_key:
+    # Resolve session token from explicit arg or environment for consistency with other APIs.
+    session_token = session or os.getenv("AOC_SESSION")
+    if not session_token and not view_key:
         raise MissingSessionTokenError(env_var="AOC_SESSION")
-    session_token = session or None
 
     try:
         with AOCClient(session_token=session_token) as client:

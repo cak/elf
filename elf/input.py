@@ -1,3 +1,5 @@
+import os
+
 import httpx
 
 from .aoc_client import AOCClient
@@ -43,13 +45,15 @@ def get_input(year: int, day: int, session: str | None) -> str:
                 unlock_time=status.unlock_time,
             )
 
-    if not session:
+    session_token = session or os.getenv("AOC_SESSION")
+
+    if not session_token:
         raise MissingSessionTokenError(env_var="AOC_SESSION")
 
     # --- Network layer --------------------------------------------------------
 
     try:
-        with AOCClient(session_token=session) as client:
+        with AOCClient(session_token=session_token) as client:
             response = client.fetch_input(year, day)
 
     except httpx.TimeoutException as exc:
