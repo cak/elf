@@ -77,9 +77,11 @@ def version_callback(value: bool) -> None:
         return
 
     try:
-        v = pkg_version("elf")  # use your actual package name
+        v = pkg_version("elf")
     except PackageNotFoundError:
-        v = "0.0.0 (local)"
+        from . import __version__
+
+        v = f"{__version__} (local)"
 
     console.print(f"Advent of Code CLI {v}")
     raise typer.Exit()
