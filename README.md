@@ -145,8 +145,14 @@ Behaviors:
 - Year and day are required to avoid accidental submissions.
 - Detects **locked puzzles** (year >= current year) and shows unlock timestamp
 - Identifies **too high / too low / duplicate** guesses from local cache
-- Caches **cooldown responses** locally for 15 minutes to avoid hammering the site
+- Caches **cooldown responses** locally for ~60 seconds to avoid hammering the site
 - Writes to guess cache automatically (per part)
+
+Exit codes:
+
+- `0` when the answer is correct or already completed on AoC
+- `2` when AoC rate-limits you (cooldown/WAIT)
+- `1` for incorrect/too-high/too-low/unknown/duplicate guesses
 
 Example errors:
 

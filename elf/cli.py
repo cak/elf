@@ -14,7 +14,7 @@ from .exceptions import ElfError
 from .guesses import get_guesses
 from .input import get_input
 from .leaderboard import get_leaderboard
-from .models import OpenKind, OutputFormat
+from .models import OpenKind, OutputFormat, SubmissionStatus
 from .open import open_page
 from .status import get_status
 
@@ -184,6 +184,15 @@ def answer_cmd(
         session=session,
     )
     console.print(submit_result.message)
+    exit_code = 0
+    if submit_result.result is SubmissionStatus.WAIT:
+        exit_code = 2
+    elif submit_result.result not in (
+        SubmissionStatus.CORRECT,
+        SubmissionStatus.COMPLETED,
+    ):
+        exit_code = 1
+    raise typer.Exit(code=exit_code)
 
 
 @app.command("leaderboard")
