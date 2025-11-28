@@ -1,6 +1,5 @@
 import csv
-import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from enum import Enum, auto
 from html.parser import HTMLParser
 
@@ -22,7 +21,10 @@ from .messages import (
     get_unexpected_response_message,
 )
 from .models import CachedGuessCheck, Guess, SubmissionResult, SubmissionStatus
-from .utils import CURRENT_YEAR, get_unlock_status, read_guesses
+from .utils import current_aoc_year, get_unlock_status, read_guesses
+from .utils import resolve_session
+
+WAIT_CACHE_TTL = timedelta(minutes=15)
 
 
 class AocResponseParser(HTMLParser):
@@ -119,7 +121,7 @@ def submit_answer(
     if isinstance(answer, str) and not answer.strip():
         raise ValueError("Answer cannot be empty.")
 
-    if year >= CURRENT_YEAR:
+    if year >= current_aoc_year():
         status = get_unlock_status(year, day)
         if not status.unlocked:
             raise PuzzleLockedError(
@@ -129,10 +131,7 @@ def submit_answer(
                 unlock_time=status.unlock_time,
             )
 
-    session_token = session or os.getenv("AOC_SESSION")
-
-    if not session_token:
-        raise MissingSessionTokenError(env_var="AOC_SESSION")
+    session_token = resolve_session(session)
 
     cache_file = get_cache_guess_file(year, day)
     cache_file.parent.mkdir(parents=True, exist_ok=True)
@@ -250,9 +249,8 @@ def submit_to_aoc(
             message = get_unexpected_response_message()
             status = SubmissionStatus.UNKNOWN
 
-    # Cache the guess unless retry needed
-    if status is not SubmissionStatus.WAIT:
-        write_guess_cache(year, day, level, answer, status)
+    # Cache the guess (including WAIT, with TTL handling on read)
+    write_guess_cache(year, day, level, answer, status)
 
     return SubmissionResult(
         guess=answer,
@@ -299,14 +297,21 @@ def check_cached_guesses(
     numeric_answer: int | None,
 ) -> CachedGuessCheck:
     guesses = read_guesses(year, day)
+    now = datetime.now(timezone.utc)
 
     highest_low: Guess | None = None
     lowest_high: Guess | None = None
     completed_guess: Guess | None = None  # NEW
+    wait_guess: Guess | None = None
 
     for g in guesses:
         if g.part != level:
             continue
+
+        # Honor recent WAIT responses for this part
+        if g.status is SubmissionStatus.WAIT and _within_wait_ttl(g.timestamp, now):
+            wait_guess = g
+            break
 
         is_same_guess = g.guess == answer or (
             numeric_answer is not None
@@ -336,7 +341,6 @@ def check_cached_guesses(
                     isinstance(highest_low.guess, int) and ans > highest_low.guess
                 ):
                     highest_low = g
-
             case Guess(guess=ans, status=SubmissionStatus.TOO_HIGH) if (
                 numeric_answer is not None and isinstance(ans, int)
             ):
@@ -344,6 +348,17 @@ def check_cached_guesses(
                     isinstance(lowest_high.guess, int) and ans < lowest_high.guess
                 ):
                     lowest_high = g
+
+    # Short-circuit on active cooldown
+    if wait_guess is not None:
+        retry_at = _retry_at(wait_guess.timestamp)
+        return CachedGuessCheck(
+            guess=answer,
+            previous_guess=None,
+            previous_timestamp=wait_guess.timestamp,
+            status=SubmissionStatus.WAIT,
+            message=_wait_cache_message(retry_at),
+        )
 
     # If we know this part is completed, short-circuit before bounds logic
     if completed_guess is not None:
@@ -389,6 +404,20 @@ def check_cached_guesses(
         status=SubmissionStatus.UNKNOWN,
         message="This is a unique guess.",
     )
+
+
+def _retry_at(ts: datetime) -> datetime:
+    ts_aware = ts if ts.tzinfo is not None else ts.replace(tzinfo=timezone.utc)
+    return ts_aware + WAIT_CACHE_TTL
+
+
+def _within_wait_ttl(ts: datetime, now: datetime) -> bool:
+    return _retry_at(ts) > now
+
+
+def _wait_cache_message(retry_at: datetime) -> str:
+    retry_str = retry_at.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    return f"{get_recent_submission_message()} Cached locally; try again after {retry_str}."
 
 
 def _normalize_answer(answer: int | str) -> tuple[int | str, int | None]:
