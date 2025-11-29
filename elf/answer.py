@@ -274,6 +274,7 @@ def write_guess_cache(
     status: SubmissionStatus,
 ) -> None:
     cache_file = get_cache_guess_file(year, day)
+
     timestamp = datetime.now(timezone.utc).isoformat()
 
     canonical_guess, _ = _normalize_answer(guess)
@@ -285,6 +286,7 @@ def write_guess_cache(
     }
 
     try:
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
         file_exists = cache_file.exists()
         with cache_file.open("a", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=row.keys())
