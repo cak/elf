@@ -78,6 +78,19 @@ To get it:
 export AOC_SESSION="your-session-token"
 ```
 
+On Windows you can persist the cookie with PowerShell:
+
+```powershell
+$env:AOC_SESSION = "your-session-token"
+setx AOC_SESSION "your-session-token"
+```
+
+Or via CMD:
+
+```cmd
+setx AOC_SESSION "your-session-token"
+```
+
 Most commands require this. You can also pass it via `--session` in the CLI or `session=` in the API.
 
 ## CLI Documentation
@@ -213,6 +226,7 @@ Options:
 ```
 
 Defaults:
+
 - `year`: current year if omitted
 
 Prints stars for each day and your AoC++ badge.
