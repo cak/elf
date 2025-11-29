@@ -8,13 +8,18 @@ A fast, modern Advent of Code CLI with caching, guardrails, leaderboards, and a 
 
 Works on macOS, Linux, and Windows. Most networked commands require an AoC session cookie (`AOC_SESSION`).
 
-![PyPI](https://img.shields.io/pypi/v/elf.svg) ![License: MIT](https://img.shields.io/badge/License-MIT-success.svg) ![AoC Ready](https://img.shields.io/badge/Advent%20of%20Code-Ready-00cc66?logo=data:image/png;base64,<tiny_pixel_icon>) ![North Pole API Compliant](https://img.shields.io/badge/North%20Pole%20API-Compliant-blue)
+<p align="center">
+  <img src="https://img.shields.io/pypi/v/elf.svg">
+  <img src="https://img.shields.io/badge/License-MIT-success.svg">
+  <img src="https://img.shields.io/badge/Advent%20of%20Code-Ready-00cc66">
+  <img src="https://img.shields.io/badge/North%20Pole%20API-Compliant-blue">
+</p>
 
 ## Why I Built This
 
 Advent of Code has become one of my favorite Christmas traditions. I am never the fastest solver, and some puzzles definitely keep me humble, but the challenges always spark new ideas and mark the start of the holiday season for me.
 
-Thank you to **Eric Wastl**, the creator of [Advent of Code](https://adventofcode.com/). His work brings an incredible community together every December and inspires people around the world to learn, explore new ideas, and enjoy the joy of programming puzzles.
+Thank you to **Eric Wastl**, the creator of [Advent of Code](https://adventofcode.com/). His work brings an incredible community together every December and inspires people around the world to learn, explore new ideas, and enjoy the fun of programming puzzles.
 
 After refining a small helper tool I have used personally for the past few years, I decided to turn it into a package others can benefit from as well. I originally built an early version for my own workflows in [my personal AoC repo](https://github.com/cak/advent-of-code/tree/dc9c02a5a77a36b725a8e01cff18a6de46e0db0d?tab=readme-ov-file#%EF%B8%8F-automating-tasks-with-the-elf-cli).
 
@@ -22,21 +27,21 @@ If Advent of Code is part of your December ritual too, I hope this little elf ma
 
 ## Highlights
 
-- One-line input fetch with **local caching** (never re-downloads)
-- **Submission guardrails:** locked puzzle check, cooldown messages, and duplicate/high/low detection from cached guesses
-- Private leaderboards as **tables**, **JSON**, or **Pydantic models**
-- **Status calendar** (table, JSON, or model) with AoC++ badge support
-- Guess history viewer (per part) built in
-- `elf open` opens puzzle, input, or main AoC pages.
-- CLI (`elf ...`) and importable library (`import elf`)
+- Fetch inputs instantly with **automatic caching**
+- Submit answers safely with **smart guardrails** (duplicate, low, high, locked, cooldown)
+- Explore private leaderboards as **tables**, **JSON**, or **Pydantic models**
+- View your **status calendar** (table, JSON, or model)
+- Inspect your **guess history** with timestamps and per-part details
+- Open any AoC page (puzzle, input, or website) straight from the CLI
+- Use elf as a **CLI tool** or a full **Python API**
 
 ## Installation
 
 ### Using uv (recommended)
 
-#### Install as tool
+#### Install as a tool
 
-```bash
+```sh
 uv tool install elf
 ```
 
@@ -48,7 +53,7 @@ uv add elf
 
 ### Using pip
 
-```bash
+```sh
 pip install elf
 ```
 
@@ -74,7 +79,7 @@ To get it:
 6. Copy the value (a long hex string).
 7. Set it as an environment variable:
 
-```bash
+```sh
 export AOC_SESSION="your-session-token"
 ```
 
@@ -92,6 +97,17 @@ setx AOC_SESSION "your-session-token"
 ```
 
 Most commands require this. You can also pass it via `--session` in the CLI or `session=` in the API.
+
+## Quick Start
+
+```sh
+export AOC_SESSION="your-session-token"
+
+elf input        # fetch today's input
+elf answer 2025 1 1 123 # submit answer for part 1
+elf status       # view progress
+elf leaderboard 2025 123456 --view-key ABCDEF
+```
 
 ## CLI Documentation
 
@@ -156,9 +172,9 @@ Options:
 Behaviors:
 
 - Year and day are required to avoid accidental submissions.
-- Detects **locked puzzles** (year >= current year) and shows unlock timestamp
-- Identifies **too high / too low / duplicate** guesses from local cache
-- Caches **cooldown responses** locally for ~60 seconds to avoid hammering the site
+- Detects locked puzzles (future days or future years) and shows unlock timestamp.
+- Identifies too high / too low / duplicate guesses from local cache
+- Caches cooldown responses locally for ~60 seconds to avoid hammering the site
 - Writes to guess cache automatically (per part)
 
 Exit codes:
@@ -180,7 +196,7 @@ You submitted an answer recently. Please wait...
 
 ### `elf guesses`
 
-Display local guess history (per part). Requires a cached `guesses.csv` from previous submissions.
+Display local guess history (per part). Requires a cached `guesses.csv` from previous submissions. Displays all guesses for both parts automatically.
 
 ```sh
 Usage: elf guesses [YEAR] [DAY]
@@ -190,8 +206,8 @@ Example table:
 
 ```sh
 Time (UTC)      Guess  Status
-2024‑12‑05 ...  959    too_low
-2024‑12‑05 ...  6951   correct
+2025‑12‑05 ...  959    too_low
+2025‑12‑05 ...  6951   correct
 ```
 
 ### `elf leaderboard`
@@ -229,7 +245,7 @@ Defaults:
 
 - `year`: current year if omitted
 
-Prints stars for each day and your AoC++ badge.
+Prints stars for each day.
 
 ### `elf open`
 
@@ -311,27 +327,27 @@ from elf.helpers import parse_input, read_test_input, timer
 ### Leaderboard Example
 
 ```sh
-❯ elf leaderboard 2024 3982840
-              Advent of Code 2024 – Private Leaderboard
+❯ elf leaderboard 2025 3913340
+              Advent of Code 2025 – Private Leaderboard
 ┏━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Rank ┃ Name           ┃ Stars ┃ Local Score ┃ Last Star (UTC)     ┃
 ┡━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━┩
-│    1 │ User A         │    45 │         900 │ 2024-12-26 00:53:17 │
-│    2 │ User B         │    45 │         855 │ 2024-12-26 00:53:56 │
-│    3 │ User C         │    36 │         622 │ 2024-12-26 03:29:21 │
+│    1 │ User A         │    45 │         900 │ 2025-12-26 00:53:17 │
+│    2 │ User B         │    45 │         855 │ 2025-12-26 00:53:56 │
+│    3 │ User C         │    36 │         622 │ 2025-12-26 03:29:21 │
 └──────┴────────────────┴───────┴─────────────┴─────────────────────┘
 ```
 
 JSON format:
 
 ```sh
-elf leaderboard 2024 3982840 --format json
+elf leaderboard 2025 3982840 --format json
 ```
 
 Model format (Pydantic):
 
 ```python
-lb = get_private_leaderboard(2024, board_id=3982840, fmt=OutputFormat.MODEL)
+lb = get_private_leaderboard(2025, board_id=3982840, fmt=OutputFormat.MODEL)
 members = sorted(lb.members.values(), key=lambda m: (-m.local_score, -m.stars))
 print(members[0].name, members[0].stars)
 ```
@@ -376,6 +392,22 @@ print(status.days[0].day, status.days[0].stars)
 
 ---
 
+## Development / Testing
+
+Install the dev dependencies (currently just `pytest`) with:
+
+```sh
+pip install -e ".[dev]"
+```
+
+Run the test suite via:
+
+```sh
+python -m pytest
+```
+
 ## Special Thanks
+
+This project exists thanks to the generosity and creativity of others.
 
 Thanks to **Solos** for donating the `elf` PyPI name.
