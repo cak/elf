@@ -53,7 +53,7 @@ DayArg = Annotated[
         default_factory=_current_day,
     ),
 ]
-LevelArg = Annotated[
+PartArg = Annotated[
     int,
     typer.Argument(
         help="Part of the puzzle (1 or 2)",
@@ -160,18 +160,18 @@ def input_cmd(
 def answer_cmd(
     year: YearArg,
     day: DayArg,
-    level: LevelArg,
+    part: PartArg,
     answer: AnswerArg,
     session: SessionOpt = None,
 ) -> None:
     """
-    Submit an answer for a given year and day.
+    Submit an answer for a given year, day, and part.
     """
 
     submit_result = submit_answer(
         year=year,
         day=day,
-        level=level,
+        level=part,
         answer=answer,
         session=session,
     )

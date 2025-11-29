@@ -163,7 +163,7 @@ Defaults:
 Submit an answer with safety guardrails. Requires a session cookie. Guardrails use your local guess cache to short-circuit duplicate answers and infer too-high/too-low for integer guesses.
 
 ```sh
-Usage: elf answer YEAR DAY LEVEL ANSWER
+Usage: elf answer YEAR DAY PART ANSWER
 
 Options:
   --session TEXT  AOC session cookie
@@ -401,6 +401,12 @@ pip install -e ".[dev]"
 ```
 
 Run the test suite via:
+
+```sh
+uv run pytest
+```
+
+Alternatively, you can still run:
 
 ```sh
 python -m pytest
