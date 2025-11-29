@@ -1,4 +1,6 @@
 from zoneinfo import ZoneInfo
 
+from ._version import get_package_version
+
 AOC_TZ = ZoneInfo("America/New_York")
-VERSION = "1.0.0"
+VERSION = get_package_version()

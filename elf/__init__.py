@@ -11,7 +11,9 @@ Public API:
 The session token can be passed explicitly or via the AOC_SESSION environment variable.
 """
 
-__version__ = "1.0.0"
+from ._version import get_package_version
+
+__version__ = get_package_version()
 
 from .client import (
     get_private_leaderboard,

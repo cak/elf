@@ -1,7 +1,5 @@
 from datetime import datetime
 from functools import wraps
-from importlib.metadata import PackageNotFoundError
-from importlib.metadata import version as pkg_version
 from typing import Annotated
 
 import typer
@@ -9,7 +7,7 @@ from rich.console import Console
 
 from .answer import submit_answer
 from .cache import get_cache_dir
-from .constants import AOC_TZ
+from .constants import AOC_TZ, VERSION
 from .exceptions import ElfError
 from .guesses import get_guesses
 from .input import get_input
@@ -112,12 +110,7 @@ def version_callback(value: bool) -> None:
     if not value:
         return
 
-    try:
-        v = pkg_version("elf")
-    except PackageNotFoundError:
-        from . import __version__
-
-        v = f"{__version__} (local)"
+    v = VERSION
 
     console.print(f"elf {v}")
     raise typer.Exit()
