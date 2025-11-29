@@ -125,12 +125,11 @@ def cli_root(
         help="Show the CLI version and exit.",
         callback=version_callback,
         is_eager=True,
-        is_flag=True,
         expose_value=False,
     ),
     debug: bool = typer.Option(
         False,
-        "--debug",
+        "--debug/--no-debug",
         help="Raise errors with tracebacks (also via ELF_DEBUG=1).",
         envvar="ELF_DEBUG",
     ),
