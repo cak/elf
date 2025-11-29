@@ -30,10 +30,15 @@ def read_guesses(year: int, day: int) -> list[Guess]:
                     )
 
                     guess_raw = row.get("guess", "")
-                    if isinstance(guess_raw, str) and guess_raw.lstrip("+-").isdigit():
-                        guess_val: int | str = int(guess_raw)
+                    if isinstance(guess_raw, str):
+                        guess_str = guess_raw.strip()
                     else:
-                        guess_val = guess_raw
+                        guess_str = str(guess_raw)
+
+                    if guess_str.lstrip("+-").isdigit():
+                        guess_val: int | str = int(guess_str)
+                    else:
+                        guess_val = guess_str
 
                     timestamp_raw = row.get("timestamp", "") or ""
                     try:

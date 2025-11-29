@@ -276,10 +276,11 @@ def write_guess_cache(
     cache_file = get_cache_guess_file(year, day)
     timestamp = datetime.now(timezone.utc).isoformat()
 
+    canonical_guess, _ = _normalize_answer(guess)
     row = {
         "timestamp": timestamp,
         "part": part,
-        "guess": str(guess),
+        "guess": str(canonical_guess),
         "status": status.name,
     }
 
