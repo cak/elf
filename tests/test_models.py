@@ -1,4 +1,3 @@
-# test_models.py
 from elf.models import OutputFormat, SubmissionResult, SubmissionStatus
 
 
