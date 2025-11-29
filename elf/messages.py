@@ -1,16 +1,6 @@
 from .models import Guess
 
 
-def get_positive_message(answer: int | str) -> str:
-    """General “nice job” feedback, not necessarily tied to star awarding."""
-    return f"{answer} is correct."
-
-
-def get_negative_message(answer: int | str) -> str:
-    """Generic “not quite” feedback (no high/low hint)."""
-    return "That answer is not correct. Check your logic and try again."
-
-
 def get_correct_answer_message(answer: int | str) -> str:
     """When AoC confirms the answer is correct and awards a star."""
     return f"{answer} is correct. Star awarded."
