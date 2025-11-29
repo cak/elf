@@ -63,7 +63,7 @@ def read_guesses(year: int, day: int) -> list[Guess]:
                     skipped_rows += 1
                     continue
     except Exception as exc:
-        raise RuntimeError(f"Failed reading guess cache {cache_file}: {exc}") from exc
+        raise ElfError(f"Failed reading guess cache {cache_file}: {exc}") from exc
 
     if skipped_rows:
         warnings.warn(
