@@ -99,9 +99,9 @@ def submit_puzzle_answer(
 
 def get_private_leaderboard(
     year: int,
-    session: str | None,
     board_id: int,
-    view_key: str | None,
+    session: str | None = None,
+    view_key: str | None = None,
     fmt: OutputFormat = OutputFormat.MODEL,
 ) -> Leaderboard | str | Table:
     """
