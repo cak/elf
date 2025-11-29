@@ -1,8 +1,7 @@
 from typer.testing import CliRunner
 
-from elf.models import OutputFormat, SubmissionResult, SubmissionStatus
 from elf.cli import app
-
+from elf.models import OutputFormat, SubmissionResult, SubmissionStatus
 
 runner = CliRunner()
 
@@ -16,9 +15,7 @@ def test_input_cmd_invokes_get_input(monkeypatch):
 
     monkeypatch.setattr("elf.cli.get_input", fake_get_input)
 
-    result = runner.invoke(
-        app, ["input", "2024", "2", "--session", "session-token"]
-    )
+    result = runner.invoke(app, ["input", "2024", "2", "--session", "session-token"])
 
     assert result.exit_code == 0
     assert result.stdout == "cached-input"
