@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import atexit
+import os
+import re
 import time
+import warnings
 from types import TracebackType
 
 import httpx
@@ -9,6 +12,9 @@ import httpx
 from .constants import VERSION
 
 _shared_client: httpx.Client | None = None
+
+_user_agent_prefix = f"elf/{VERSION}"
+_default_user_agent = "+https://github.com/cak/elf"
 
 
 def _get_http_client() -> httpx.Client:
@@ -21,8 +27,18 @@ def _get_http_client() -> httpx.Client:
     """
     global _shared_client
     if _shared_client is None:
+        user_agent = os.getenv("AOC_USER_AGENT")
+        if not _validate_user_agent(user_agent):
+            warnings.warn(
+                f"Invalid User-Agent header: {user_agent!r}\n\n"
+                "User-Agent should include an email address. "
+                "Please set AOC_USER_AGENT in your environment.",
+                RuntimeWarning,
+            )
+            user_agent = _default_user_agent
+
         _shared_client = httpx.Client(
-            headers={"User-Agent": f"elf/{VERSION} (+https://github.com/cak/elf)"},
+            headers={"User-Agent": _construct_user_agent(user_agent)},
             follow_redirects=True,
             timeout=httpx.Timeout(connect=5.0, read=15.0, write=10.0, pool=20.0),
             limits=httpx.Limits(max_keepalive_connections=10, max_connections=20),
@@ -36,6 +52,20 @@ def _close_http_client() -> None:
 
 
 atexit.register(_close_http_client)
+
+
+def _construct_user_agent(user_agent: str) -> str:
+    return f"{_user_agent_prefix} ({user_agent})"
+
+
+def _validate_user_agent(user_agent: str) -> bool:
+    """
+    Does very minimal checking to ensure that the user agent contains
+    enough information for Eric Wastl (AoC author) to contact the user.
+    """
+
+    return user_agent is not None and \
+        re.search(r"[^@]+@[^.]+\..+", user_agent) is not None
 
 
 class AOCClient:
