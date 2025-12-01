@@ -28,14 +28,30 @@ def _get_http_client() -> httpx.Client:
     global _shared_client
     if _shared_client is None:
         user_agent = os.getenv("AOC_USER_AGENT")
+
+        # Strip whitespace and control characters if present
+        if user_agent is not None:
+            user_agent = user_agent.replace("\r", "").replace("\n", "").strip()
+
         if not _validate_user_agent(user_agent):
-            warnings.warn(
-                f"Invalid User-Agent header: {user_agent!r}\n\n"
-                "User-Agent should include an email address. "
-                "Please set AOC_USER_AGENT in your environment.",
-                RuntimeWarning,
-            )
+            # Missing vs invalid message
+            if user_agent is None:
+                warnings.warn(
+                    "User-Agent should include an email address. "
+                    "Please set AOC_USER_AGENT in your environment.",
+                    RuntimeWarning,
+                )
+            else:
+                warnings.warn(
+                    f"Invalid User-Agent header: {user_agent!r}\n\n"
+                    "User-Agent should include an email address. "
+                    "Please set AOC_USER_AGENT in your environment.",
+                    RuntimeWarning,
+                )
             user_agent = _default_user_agent
+
+        # Ensure user_agent is not None at this point
+        assert user_agent is not None
 
         _shared_client = httpx.Client(
             headers={"User-Agent": _construct_user_agent(user_agent)},
@@ -58,14 +74,14 @@ def _construct_user_agent(user_agent: str) -> str:
     return f"{_user_agent_prefix} ({user_agent})"
 
 
-def _validate_user_agent(user_agent: str) -> bool:
+def _validate_user_agent(user_agent: str | None) -> bool:
     """
-    Does very minimal checking to ensure that the user agent contains
-    enough information for Eric Wastl (AoC author) to contact the user.
+    Very minimal check that the user agent string contains something that
+    looks like an email address so Eric Wastl can contact the user.
     """
-
-    return user_agent is not None and \
-        re.search(r"[^@]+@[^.]+\..+", user_agent) is not None
+    return (
+        user_agent is not None and re.search(r"[^@]+@[^.]+\..+", user_agent) is not None
+    )
 
 
 class AOCClient:
@@ -74,16 +90,23 @@ class AOCClient:
         self.session_token = session_token
         self._client = _get_http_client()
 
-    def _get(self, path: str) -> httpx.Response:
+    def _get(self, path: str, params: dict[str, str] | None = None) -> httpx.Response:
         cookies = {"session": self.session_token} if self.session_token else None
-        return self._client.get(f"{self.base_url}{path}", cookies=cookies)
+        return self._client.get(
+            f"{self.base_url}{path}", params=params, cookies=cookies
+        )
 
     def _post(self, path: str, data: dict[str, str]) -> httpx.Response:
         cookies = {"session": self.session_token} if self.session_token else None
         return self._client.post(f"{self.base_url}{path}", data=data, cookies=cookies)
 
     def _get_with_retries(
-        self, path: str, *, retries: int = 2, backoff: float = 0.5
+        self,
+        path: str,
+        *,
+        retries: int = 2,
+        backoff: float = 0.5,
+        params: dict[str, str] | None = None,
     ) -> httpx.Response:
         """
         Basic retry wrapper for idempotent GETs to smooth over transient network hiccups.
@@ -91,7 +114,7 @@ class AOCClient:
         attempt = 0
         while True:
             try:
-                return self._get(path)
+                return self._get(path, params=params)
             except (httpx.TimeoutException, httpx.TransportError):
                 if attempt >= retries:
                     raise
@@ -133,14 +156,11 @@ class AOCClient:
         Fetch a private leaderboard for a specific year.
         If a view_key is provided, it will be included in the request.
         """
-        if view_key:
-            response = self._get_with_retries(
-                f"/{year}/leaderboard/private/view/{board_id}.json?view_key={view_key}"
-            )
-        else:
-            response = self._get_with_retries(
-                f"/{year}/leaderboard/private/view/{board_id}.json"
-            )
+        params = {"view_key": view_key} if view_key else None
+        response = self._get_with_retries(
+            f"/{year}/leaderboard/private/view/{board_id}.json",
+            params=params,
+        )
         return response
 
     def fetch_event(self, year: int) -> httpx.Response:
