@@ -52,12 +52,11 @@ def timer(
     return decorator
 
 
-def read_test_input(base_dir: Path) -> str:
-    """Read test input from test_input.txt file."""
-    test_input_file = base_dir / "test_input.txt"
-    if not test_input_file.exists():
+def read_input(path: Path) -> str:
+    """Read input from a file and return its contents."""
+    if not path.is_file():
         raise FileNotFoundError(
-            "🛑 No test_input.txt found. Please add test input data."
+            f"Input file not found: {path}. Please add the missing file."
         )
 
-    return test_input_file.read_text(encoding="utf-8").strip()
+    return path.read_text(encoding="utf-8").strip()
