@@ -98,6 +98,28 @@ setx AOC_SESSION "your-session-token"
 
 Most commands require this. You can also pass it via `--session` in the CLI or `session=` in the API.
 
+### Your User-Agent (Recommended)
+
+Elf follows the guidance from Eric Wastl (creator of Advent of Code) to help keep traffic friendly to the site.
+
+If you run tools that make automated requests, you should provide contact information in your User-Agent header so Eric can reach you if something goes wrong with your traffic. This is optional but strongly recommended.
+
+Set your email address in the environment variable `AOC_USER_AGENT`:
+
+```sh
+export AOC_USER_AGENT="you@example.com"
+Windows PowerShell:
+$env:AOC_USER_AGENT = "you@example.com"
+setx AOC_USER_AGENT "you@example.com"
+```
+
+If this variable is not set or does not look like an email address, elf falls back to a safe default and prints a warning.
+Your User-Agent header will look like:
+elf/<version> (you@example.com)
+This helps Eric identify the person sending the traffic while still including the library name.
+
+If the warning fires, elf instead sends `elf/<version> (+https://github.com/cak/elf)` so AoC still sees a recognizable identifier even without your email.
+
 ## Quick Start
 
 ```sh
@@ -107,6 +129,15 @@ elf input        # fetch today's input
 elf answer 2025 1 1 123 # submit answer for part 1
 elf status       # view progress
 elf leaderboard 2025 123456 --view-key ABCDEF
+```
+
+### Saving puzzle input to files
+
+If you prefer to keep your own local copies of puzzle inputs, elf works just like a regular Unix command. You can redirect the output to save any day's input:
+
+```sh
+elf input > input.txt              # save today's input
+elf input 2025 2 > day02.txt       # save a specific day's input
 ```
 
 ## CLI Documentation
@@ -394,12 +425,6 @@ print(status.days[0].day, status.days[0].stars)
 
 ## Development / Testing
 
-Install the dev dependencies (currently just `pytest`) with:
-
-```sh
-pip install -e ".[dev]"
-```
-
 Run the test suite via:
 
 ```sh
@@ -411,6 +436,8 @@ Alternatively, you can still run:
 ```sh
 python -m pytest
 ```
+
+Running `python -m pytest` directly requires `pytest` to be installed in your environment. Install it via `pip install pytest>=9.0.1` (or use `uv run pytest` / `pip install .[dev]` if you maintain the dev extras) before running the command outside of `uv`.
 
 ## Special Thanks
 
