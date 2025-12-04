@@ -327,7 +327,8 @@ def check_cached_guesses(
             and g.guess == numeric_answer
         )
 
-        if is_same_guess:
+        # Prevent repeating guess unless guess response was WAIT
+        if is_same_guess and g.status != SubmissionStatus.WAIT:
             return CachedGuessCheck(
                 guess=answer,
                 previous_guess=g.guess,
