@@ -42,9 +42,15 @@ def test_user_agent_set_in_AOCClient(monkeypatch, aoc_client):
 
 
 def test_default_user_agent_set_in_AOCClient(monkeypatch, aoc_client):
+    # Simulate no AOC_USER_AGENT set in the environment so we hit the default UA path
+    monkeypatch.delenv("AOC_USER_AGENT", raising=False)
+
+    # Ensure we get a fresh client instead of reusing a previously-initialized one
     monkeypatch.setattr(elf.aoc_client, "_shared_client", None)
+
     with pytest.warns(RuntimeWarning):
         client = aoc_client()
+
     httpx_client: httpx.Client = client._client
     user_agent_header = httpx_client.headers.get("User-Agent", "")
     assert _default_user_agent in user_agent_header
