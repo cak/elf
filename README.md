@@ -233,6 +233,8 @@ Display local guess history (per part). Requires a cached `guesses.csv` from pre
 Usage: elf guesses [YEAR] [DAY]
 ```
 
+`elf guesses` loads its data solely from the local `guesses.csv`; it never reaches out to AoC and does not require `AOC_SESSION`, so it works offline as long as the cache already exists.
+
 Example table:
 
 ```sh
