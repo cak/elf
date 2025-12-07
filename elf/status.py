@@ -132,7 +132,7 @@ def _stars_from_aria_and_classes(
     return 0
 
 
-def _parse_day_status(element: Tag) -> DayStatus | None:
+def _parse_day_status(element: Tag, *, is_locked: bool) -> DayStatus | None:
     aria_label = element.get("aria-label", "") or ""
     aria_label_str = str(aria_label) if aria_label else None
 
@@ -164,6 +164,7 @@ def _parse_day_status(element: Tag) -> DayStatus | None:
         stars=stars,
         href=href,
         aria_label=str(aria_label) if aria_label else "",
+        is_locked=is_locked,
     )
 
 
@@ -191,9 +192,15 @@ def parse_year_status(html: str) -> YearStatus:
 
     day_statuses: list[DayStatus] = []
 
-    # Each day is an <a> with class "calendar-dayN"
+    # Each unlocked day is an <a> with class "calendar-dayN"
     for a in calendar.select("a[class^='calendar-day']"):
-        day_status = _parse_day_status(a)
+        day_status = _parse_day_status(a, is_locked=False)
+        if day_status:
+            day_statuses.append(day_status)
+
+    # Each locked day is an <span> with class "calendar-dayN"
+    for span in calendar.select("span[class^='calendar-day']"):
+        day_status = _parse_day_status(span, is_locked=True)
         if day_status:
             day_statuses.append(day_status)
 

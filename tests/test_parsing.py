@@ -1,3 +1,4 @@
+from elf import DayStatus
 from elf.leaderboard import format_leaderboard_as_table
 from elf.models import Leaderboard
 from elf.status import build_year_status_table, parse_login_state, parse_year_status
@@ -64,6 +65,9 @@ def test_status_parsing_handles_basic_calendar_html():
         <a class="calendar-day3" aria-label="Day 3">
           <span class="calendar-day">3</span>
         </a>
+        <span aria-hidden="true" class="calendar-day4">
+            <span class="calendar-day">4</span>
+        </span>
       </pre>
       <a href="/settings">Settings</a>
     </html>
@@ -74,8 +78,15 @@ def test_status_parsing_handles_basic_calendar_html():
     status = parse_year_status(html)
     assert status.year == 2025
     assert status.total_stars == 5
-    assert len(status.days) == 3
+    assert len(status.days) == 4
+
+    assert [(day.day, day.stars, day.is_locked) for day in status.days] == [
+        (1, 2, False),
+        (2, 1, False),
+        (3, 0, False),
+        (4, 0, True),
+    ]
 
     table = build_year_status_table(status)
-    assert table.row_count == 3
+    assert table.row_count == 4
     assert table.title and "2025" in table.title
