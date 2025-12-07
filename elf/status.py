@@ -230,7 +230,9 @@ def build_year_status_table(status: YearStatus) -> Table:
 
     for day in sorted(status.days, key=lambda d: d.day):
         # Render stars as a 2-star gauge: ★ for earned, ☆ for missing
-        stars_str = "★" * day.stars + "☆" * (2 - day.stars)
+        stars_str = (
+            "★" * day.stars + "☆" * (2 - day.stars) if not day.is_locked else "🔒"
+        )
 
         # Row coloring based on completion
         if day.stars == 2:
