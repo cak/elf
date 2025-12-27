@@ -153,6 +153,7 @@ class DayStatus(BaseModel):
     stars: int = Field(..., ge=0, le=2)
     href: str
     aria_label: str
+    is_locked: bool
 
     model_config = {
         "frozen": True,  # makes objects hashable/immutable

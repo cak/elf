@@ -132,6 +132,42 @@ def _stars_from_aria_and_classes(
     return 0
 
 
+def _parse_day_status(element: Tag, *, is_locked: bool) -> DayStatus | None:
+    aria_label = element.get("aria-label", "") or ""
+    aria_label_str = str(aria_label) if aria_label else None
+
+    # Try day number from aria-label first
+    day_num: int | None = None
+    m = re.search(r"Day\s+(\d+)", str(aria_label))
+    if m:
+        day_num = int(m.group(1))
+
+    if day_num is None:
+        # Fallback to the inner span with class "calendar-day"
+        day_span = element.select_one(".calendar-day")
+        if not day_span:
+            return None
+        day_num = int(day_span.get_text(strip=True))
+
+    href_raw = element.get("href", "")
+    href = str(href_raw) if href_raw else ""
+
+    classes = element.get("class") or []
+    if isinstance(classes, str):
+        classes = classes.split()
+    elif not isinstance(classes, list):
+        classes = list(classes) if classes else []
+    stars = _stars_from_aria_and_classes(aria_label_str, classes)
+
+    return DayStatus(
+        day=day_num,
+        stars=stars,
+        href=href,
+        aria_label=str(aria_label) if aria_label else "",
+        is_locked=is_locked,
+    )
+
+
 def parse_year_status(html: str) -> YearStatus:
     soup = BeautifulSoup(html, "html.parser")
 
@@ -156,42 +192,17 @@ def parse_year_status(html: str) -> YearStatus:
 
     day_statuses: list[DayStatus] = []
 
-    # Each day is an <a> with class "calendar-dayN"
+    # Each unlocked day is an <a> with class "calendar-dayN"
     for a in calendar.select("a[class^='calendar-day']"):
-        aria_label = a.get("aria-label", "") or ""
-        aria_label_str = str(aria_label) if aria_label else None
+        day_status = _parse_day_status(a, is_locked=False)
+        if day_status:
+            day_statuses.append(day_status)
 
-        # Try day number from aria-label first
-        day_num: int | None = None
-        m = re.search(r"Day\s+(\d+)", str(aria_label))
-        if m:
-            day_num = int(m.group(1))
-
-        if day_num is None:
-            # Fallback to the inner span with class "calendar-day"
-            day_span = a.select_one(".calendar-day")
-            if not day_span:
-                continue
-            day_num = int(day_span.get_text(strip=True))
-
-        href_raw = a.get("href", "")
-        href = str(href_raw) if href_raw else ""
-
-        classes = a.get("class") or []
-        if isinstance(classes, str):
-            classes = classes.split()
-        elif not isinstance(classes, list):
-            classes = list(classes) if classes else []
-        stars = _stars_from_aria_and_classes(aria_label_str, classes)
-
-        day_statuses.append(
-            DayStatus(
-                day=day_num,
-                stars=stars,
-                href=href,
-                aria_label=str(aria_label) if aria_label else "",
-            )
-        )
+    # Each locked day is an <span> with class "calendar-dayN"
+    for span in calendar.select("span[class^='calendar-day']"):
+        day_status = _parse_day_status(span, is_locked=True)
+        if day_status:
+            day_statuses.append(day_status)
 
     # Sort by day number to be safe
     day_statuses.sort(key=lambda d: d.day)
@@ -219,7 +230,9 @@ def build_year_status_table(status: YearStatus) -> Table:
 
     for day in sorted(status.days, key=lambda d: d.day):
         # Render stars as a 2-star gauge: ★ for earned, ☆ for missing
-        stars_str = "★" * day.stars + "☆" * (2 - day.stars)
+        stars_str = (
+            "★" * day.stars + "☆" * (2 - day.stars) if not day.is_locked else "🔒"
+        )
 
         # Row coloring based on completion
         if day.stars == 2:
