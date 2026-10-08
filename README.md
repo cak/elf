@@ -108,7 +108,11 @@ Set your email address in the environment variable `AOC_USER_AGENT`:
 
 ```sh
 export AOC_USER_AGENT="you@example.com"
+```
+
 Windows PowerShell:
+
+```powershell
 $env:AOC_USER_AGENT = "you@example.com"
 setx AOC_USER_AGENT "you@example.com"
 ```
@@ -186,8 +190,9 @@ Options:
 Defaults:
 
 - `year`: current year
-- `day`: current day in December, otherwise 1 (Dec 1)
-- Caches to `~/.cache/elf/<year>/<day>/input.txt` (or platform equivalent)
+- `day`: current day in December capped at that event's final day, otherwise 1
+- Events through 2024 contain 25 days; events from 2025 onward use the 12-day format
+- Caches are account-scoped under `~/.cache/elf/accounts/<credential-hash>/<year>/<day>/input.txt` (or the platform equivalent)
 
 ### `elf answer`
 
@@ -231,9 +236,12 @@ Display local guess history (per part). Requires a cached `guesses.csv` from pre
 
 ```sh
 Usage: elf guesses [YEAR] [DAY]
+
+Options:
+  --session TEXT  Select an account-specific cache (env: AOC_SESSION)
 ```
 
-`elf guesses` loads its data solely from the local `guesses.csv`; it never reaches out to AoC and does not require `AOC_SESSION`, so it works offline as long as the cache already exists.
+`elf guesses` loads data solely from the local `guesses.csv`; it never reaches out to AoC. It works offline without `AOC_SESSION` when there is only one matching account cache. If multiple accounts have cached guesses for the same puzzle, provide the appropriate session token to select one.
 
 Example table:
 
@@ -254,6 +262,7 @@ Options:
   --view-key TEXT
   --session TEXT
   --format table|json|model
+  --refresh          Bypass the 15-minute local cache
 ```
 
 Supports:
@@ -261,6 +270,8 @@ Supports:
 - **table:** pretty Rich table
 - **json:** raw JSON
 - **model:** structured Pydantic model
+
+Leaderboard responses are cached for 15 minutes, following Advent of Code's request not to poll private leaderboard JSON more frequently than once every 900 seconds.
 
 ### `elf status`
 
@@ -311,8 +322,10 @@ Shows:
 
 - Default cache dir: macOS/Linux `~/.cache/elf`, Windows `%LOCALAPPDATA%\elf`
 - Override location with `ELF_CACHE_DIR` (respects `XDG_CACHE_HOME` on Linux)
-- Inputs stored under: `<cache>/<year>/<day>/input.txt`
-- Guess history stored as `<cache>/<year>/<day>/guesses.csv`
+- Account-specific data is stored below `<cache>/accounts/<credential-hash>/`; credentials themselves are never written to disk
+- Inputs stored under: `<account-cache>/<year>/<day>/input.txt`
+- Guess history stored as `<account-cache>/<year>/<day>/guesses.csv`
+- Private leaderboards are cached for 15 minutes under `<account-cache>/<year>/leaderboards/`
 - Duplicate/high/low guesses are short‑circuited locally when possible
 - Cooldown responses are cached locally for ~60 seconds to avoid hammering AoC
 - Guardrails rely on your local guess history only (new machines/cleared cache = fresh)
@@ -320,7 +333,7 @@ Shows:
 
 ### Concurrency note
 
-The library reuses a process-global `httpx.Client` to keep CLI calls fast. For heavy multi-threaded usage, create separate `elf.aoc_client.AOCClient` instances per thread to avoid sharing the global session.
+The library reuses a process-global `httpx.Client` to keep connections warm. Complete cache-file replacements are atomic, which prevents readers from observing partially written input or leaderboard data.
 
 ---
 
@@ -354,7 +367,7 @@ print(status)
 `elf.helpers` includes some small utilities you can use in your own AoC solutions:
 
 ```python
-from elf.helpers import parse_input, read_test_input, timer
+from elf.helpers import parse_input, read_input, timer
 ```
 
 ### Leaderboard Example
@@ -365,9 +378,9 @@ from elf.helpers import parse_input, read_test_input, timer
 ┏━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Rank ┃ Name           ┃ Stars ┃ Local Score ┃ Last Star (UTC)     ┃
 ┡━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━┩
-│    1 │ User A         │    45 │         900 │ 2025-12-26 00:53:17 │
-│    2 │ User B         │    45 │         855 │ 2025-12-26 00:53:56 │
-│    3 │ User C         │    36 │         622 │ 2025-12-26 03:29:21 │
+│    1 │ User A         │    24 │         900 │ 2025-12-26 00:53:17 │
+│    2 │ User B         │    23 │         855 │ 2025-12-26 00:53:56 │
+│    3 │ User C         │    20 │         622 │ 2025-12-26 03:29:21 │
 └──────┴────────────────┴───────┴─────────────┴─────────────────────┘
 ```
 
@@ -406,7 +419,7 @@ Advent of Code
 │   9 │  ☆☆   │
 │  10 │  ☆☆   │
 │  .. │  ..   │
-│  25 │  ☆☆   │
+│  12 │  ☆☆   │
 └─────┴───────┘
 ```
 
@@ -439,7 +452,7 @@ Alternatively, you can still run:
 python -m pytest
 ```
 
-Running `python -m pytest` directly requires `pytest` to be installed in your environment. Install it via `pip install pytest>=9.0.1` (or use `uv run pytest` / `pip install .[dev]` if you maintain the dev extras) before running the command outside of `uv`.
+Running `python -m pytest` directly requires `pytest` to be installed in your environment. Install the development extra with `pip install '.[dev]'`, or use `uv sync --group dev` and `uv run pytest`.
 
 ## Special Thanks
 
