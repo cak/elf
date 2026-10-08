@@ -6,8 +6,8 @@ from elf.status import build_year_status_table, parse_login_state, parse_year_st
 
 def test_leaderboard_model_accepts_string_keys_and_formats_table():
     payload = {
-        "num_days": 25,
-        "event": "Advent of Code 2025",
+        "num_days": 12,
+        "event": "2025",
         "day1_ts": 1700000000,
         "owner_id": 123,
         "members": {
@@ -15,7 +15,7 @@ def test_leaderboard_model_accepts_string_keys_and_formats_table():
                 "id": 123,
                 "name": "Elf One",
                 "last_star_ts": 1700000123,
-                "stars": 45,
+                "stars": 24,
                 "local_score": 900,
                 "completion_day_level": {
                     "1": {
@@ -27,7 +27,7 @@ def test_leaderboard_model_accepts_string_keys_and_formats_table():
                 "id": 456,
                 "name": "Elf Two",
                 "last_star_ts": 1700000456,
-                "stars": 38,
+                "stars": 20,
                 "local_score": 750,
                 "completion_day_level": {},
             },

@@ -104,7 +104,9 @@ def test_get_private_leaderboard_without_view_key(monkeypatch):
         resolved.append(session)
         return "resolved-token"
 
-    def fake_get_leaderboard(year, session_token, board_id, view_key, fmt):
+    def fake_get_leaderboard(
+        year, session_token, board_id, view_key, fmt, refresh=False
+    ):
         captured.update(
             {
                 "year": year,
@@ -112,6 +114,7 @@ def test_get_private_leaderboard_without_view_key(monkeypatch):
                 "board_id": board_id,
                 "view_key": view_key,
                 "fmt": fmt,
+                "refresh": refresh,
             }
         )
         return "leaderboard-data"
@@ -131,6 +134,7 @@ def test_get_private_leaderboard_without_view_key(monkeypatch):
         "board_id": 10,
         "view_key": None,
         "fmt": OutputFormat.JSON,
+        "refresh": False,
     }
 
 
@@ -142,7 +146,9 @@ def test_get_private_leaderboard_with_view_key_allows_none_session(monkeypatch):
     """
     captured = {}
 
-    def fake_get_leaderboard(year, session_token, board_id, view_key, fmt):
+    def fake_get_leaderboard(
+        year, session_token, board_id, view_key, fmt, refresh=False
+    ):
         captured.update(
             {
                 "year": year,
@@ -150,6 +156,7 @@ def test_get_private_leaderboard_with_view_key_allows_none_session(monkeypatch):
                 "board_id": board_id,
                 "view_key": view_key,
                 "fmt": fmt,
+                "refresh": refresh,
             }
         )
         return "leaderboard-data"
@@ -200,7 +207,9 @@ def test_get_private_leaderboard_default_format_model(monkeypatch):
     def fake_resolve(session):
         return "resolved-token"
 
-    def fake_get_leaderboard(year, session_token, board_id, view_key, fmt):
+    def fake_get_leaderboard(
+        year, session_token, board_id, view_key, fmt, refresh=False
+    ):
         captured.update(
             {
                 "year": year,
@@ -208,6 +217,7 @@ def test_get_private_leaderboard_default_format_model(monkeypatch):
                 "board_id": board_id,
                 "view_key": view_key,
                 "fmt": fmt,
+                "refresh": refresh,
             }
         )
         return "leaderboard-data"

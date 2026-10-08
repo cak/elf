@@ -55,7 +55,7 @@ def test_answer_cmd_exit_codes(monkeypatch):
 def test_leaderboard_cmd_forwards_options(monkeypatch):
     captured = {}
 
-    def fake_get_leaderboard(year, session, board_id, view_key, fmt):
+    def fake_get_leaderboard(year, session, board_id, view_key, fmt, refresh):
         captured.update(
             {
                 "year": year,
@@ -63,6 +63,7 @@ def test_leaderboard_cmd_forwards_options(monkeypatch):
                 "board_id": board_id,
                 "view_key": view_key,
                 "fmt": fmt,
+                "refresh": refresh,
             }
         )
         return "leaderboard-output"
@@ -113,7 +114,10 @@ def test_cache_cmd_handles_empty_dir(monkeypatch, tmp_path):
 
 
 def test_guesses_cmd_invokes_reader(monkeypatch):
-    monkeypatch.setattr("elf.cli.get_guesses", lambda year, day: "guess-history")
+    monkeypatch.setattr(
+        "elf.cli.get_guesses",
+        lambda year, day, session=None: "guess-history",
+    )
 
     result = runner.invoke(app, ["guesses", "2024", "3"])
 

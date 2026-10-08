@@ -57,3 +57,18 @@ def test_bounds_inferred_from_cache(cache_dir):
     assert result.status is SubmissionStatus.TOO_LOW
     assert result.previous_guess == 10
     assert "highest low" in result.message
+
+
+def test_correct_guess_marks_part_complete(cache_dir):
+    write_guess_cache(2025, 1, 1, 42, SubmissionStatus.CORRECT)
+
+    result = check_cached_guesses(
+        year=2025,
+        day=1,
+        level=1,
+        answer=99,
+        numeric_answer=99,
+    )
+
+    assert result.status is SubmissionStatus.COMPLETED
+    assert "already completed" in result.message
