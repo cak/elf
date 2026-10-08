@@ -1,43 +1,39 @@
 [project]
 name = "elf"
-version = "1.1.1"
+version = "1.2.1"
 description = "Advent of Code helper for Python: fetch and cache inputs, submit answers, and pull private leaderboards."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [
-    { name = "cak", email = "cak@typeerror.com" }
-]
+authors = [{ name = "cak", email = "cak@typeerror.com" }]
 requires-python = ">=3.11"
 
 dependencies = [
-    "beautifulsoup4>=4.14.2",
-    "httpx>=0.28.1",
-    "pydantic>=2.12.4",
-    "rich>=14.2.0",
-    "typer>=0.20.0",
+  "beautifulsoup4>=4.14.2",
+  "httpx>=0.28.1",
+  "pydantic>=2.12.4",
+  "rich>=14.2.0",
+  "tzdata>=2025.2; sys_platform == 'win32'",
+  "typer>=0.20.0",
 ]
 
-keywords = [
-    "advent of code",
-    "aoc",
-    "cli",
-    "python",
-    "puzzles",
-]
+keywords = ["advent of code", "aoc", "cli", "python", "puzzles"]
 
 classifiers = [
-    "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Topic :: Games/Entertainment :: Puzzle Games",
-    "Topic :: Software Development :: Libraries",
-    "Topic :: Utilities",
-    "Typing :: Typed",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Games/Entertainment :: Puzzle Games",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Utilities",
+  "Typing :: Typed",
 ]
+
+[project.optional-dependencies]
+dev = ["pytest>=9.0.1"]
 
 [project.urls]
 Homepage = "https://github.com/cak/elf"
@@ -59,6 +55,4 @@ requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [dependency-groups]
-dev = [
-    "pytest>=9.0.1",
-]
+dev = ["pytest>=9.0.1"]
