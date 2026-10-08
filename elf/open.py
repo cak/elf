@@ -1,13 +1,11 @@
 import webbrowser
 
 from .models import OpenKind
+from .utils import validate_event_day
 
 
 def open_page(year: int, day: int, kind: OpenKind) -> str:
-    if year < 2015:
-        raise ValueError(f"Invalid year {year!r}. Advent of Code started in 2015.")
-    if not 1 <= day <= 25:
-        raise ValueError(f"Invalid day {day!r}. Advent of Code days are 1–25.")
+    validate_event_day(year, day)
 
     url = "https://adventofcode.com/"
 

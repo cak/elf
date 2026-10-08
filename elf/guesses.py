@@ -1,23 +1,48 @@
+import os
 from datetime import datetime, timezone
 
 from rich.console import Group
 from rich.table import Table
 from rich.text import Text
 
-from .cache import get_cache_guess_file
+from .cache import (
+    find_scoped_guess_files,
+    get_cache_guess_file,
+    get_session_cache_scope,
+    migrate_legacy_cache_file,
+)
 from .exceptions import ElfError
 from .models import Guess, SubmissionStatus
-from .utils import read_guesses
+from .utils import read_guesses, validate_event_day
 
 
-def get_guesses(year: int, day: int) -> Group:
-    cache_file = get_cache_guess_file(year, day)
+def get_guesses(year: int, day: int, session: str | None = None) -> Group:
+    validate_event_day(year, day)
+    session_token = session or os.getenv("AOC_SESSION")
+    if session_token:
+        cache_file = get_cache_guess_file(
+            year, day, get_session_cache_scope(session_token)
+        )
+        migrate_legacy_cache_file(get_cache_guess_file(year, day), cache_file)
+    else:
+        scoped_files = find_scoped_guess_files(year, day)
+        if len(scoped_files) > 1:
+            raise ElfError(
+                "Multiple account-specific guess caches were found. "
+                "Set AOC_SESSION or pass --session to select one."
+            )
+        cache_file = (
+            scoped_files[0]
+            if scoped_files
+            else get_cache_guess_file(year, day)
+        )
+
     if not cache_file.exists():
         raise ElfError(
             f"No cached guesses found yet for {year}-12-{day:02d}. "
             "Submit an answer before viewing guess history."
         )
-    cached_guesses = read_guesses(year, day)
+    cached_guesses = read_guesses(year, day, cache_file=cache_file)
 
     return render_guess_tables(cached_guesses)
 

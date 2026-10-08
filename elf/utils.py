@@ -2,17 +2,29 @@ import csv
 import os
 import warnings
 from datetime import datetime, timezone
+from pathlib import Path
 
 import httpx
 
-from .cache import get_cache_guess_file
+from .cache import get_cache_guess_file, get_session_cache_scope
 from .constants import AOC_TZ
 from .exceptions import ElfError, MissingSessionTokenError
 from .models import Guess, SubmissionStatus, UnlockStatus
 
+LEGACY_EVENT_LAST_DAY = 25
+MODERN_EVENT_LAST_DAY = 12
 
-def read_guesses(year: int, day: int) -> list[Guess]:
-    cache_file = get_cache_guess_file(year, day)
+
+def read_guesses(
+    year: int,
+    day: int,
+    session_token: str | None = None,
+    *,
+    cache_file: Path | None = None,
+) -> list[Guess]:
+    if cache_file is None:
+        scope = get_session_cache_scope(session_token) if session_token else None
+        cache_file = get_cache_guess_file(year, day, scope)
     if not cache_file.exists():
         return []
 
@@ -90,15 +102,30 @@ def current_aoc_year() -> int:
     return datetime.now(tz=AOC_TZ).year
 
 
+def event_last_day(year: int) -> int:
+    """Return the final puzzle day for an Advent of Code event year."""
+    if year < 2015:
+        raise ValueError(f"Invalid year {year!r}. Advent of Code started in 2015.")
+    return LEGACY_EVENT_LAST_DAY if year <= 2024 else MODERN_EVENT_LAST_DAY
+
+
+def validate_event_day(year: int, day: int) -> None:
+    """Validate a day against the schedule used by the requested event."""
+    last_day = event_last_day(year)
+    if not 1 <= day <= last_day:
+        raise ValueError(
+            f"Invalid day {day!r} for Advent of Code {year}. "
+            f"Valid days are 1–{last_day}."
+        )
+
+
 def get_unlock_status(year: int, day: int) -> UnlockStatus:
     """
     Return whether the given AoC puzzle is unlocked yet, based on America/New_York.
 
     AoC unlocks each day at midnight local time (Y-12-D 00:00 in America/New_York).
     """
-    if not 1 <= day <= 25:
-        # Let existing validation handle out-of-range days elsewhere
-        raise ValueError(f"Invalid day {day!r}. Advent of Code days are 1–25.")
+    validate_event_day(year, day)
 
     # Current time in AoC timezone
     now = datetime.now(tz=AOC_TZ)

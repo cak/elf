@@ -15,6 +15,7 @@ from .leaderboard import get_leaderboard
 from .models import OpenKind, OutputFormat, SubmissionStatus
 from .open import open_page
 from .status import get_status
+from .utils import event_last_day
 
 app = typer.Typer(
     help="Advent of Code CLI",
@@ -33,7 +34,7 @@ def _current_year() -> int:
 
 def _current_day() -> int:
     today = datetime.now(tz=AOC_TZ)
-    return min(today.day, 25) if today.month == 12 else 1
+    return min(today.day, event_last_day(today.year)) if today.month == 12 else 1
 
 
 YearArg = Annotated[
@@ -47,9 +48,8 @@ YearArg = Annotated[
 DayArg = Annotated[
     int,
     typer.Argument(
-        help="Day of the event (1–25)",
+        help="Day of the event (valid range depends on the event year)",
         min=1,
-        max=25,
         default_factory=_current_day,
     ),
 ]
@@ -198,6 +198,10 @@ def leaderboard_cmd(
     ] = None,
     session: SessionOpt = None,
     output_format: FormatOpt = OutputFormat.TABLE,
+    refresh: Annotated[
+        bool,
+        typer.Option("--refresh", help="Bypass the 15-minute local cache"),
+    ] = False,
 ) -> None:
     """
     Fetch and display a private leaderboard for a given year.
@@ -208,9 +212,13 @@ def leaderboard_cmd(
         board_id=board_id,
         view_key=view_key,
         fmt=output_format,
+        refresh=refresh,
     )
 
-    console.print(leaderboard_data)
+    if output_format is OutputFormat.JSON:
+        typer.echo(leaderboard_data)
+    else:
+        console.print(leaderboard_data)
 
 
 @app.command("guesses")
@@ -218,11 +226,12 @@ def leaderboard_cmd(
 def guesses_cmd(
     year: YearArg,
     day: DayArg,
+    session: SessionOpt = None,
 ) -> None:
     """
     Display cached guesses for a given year and day.
     """
-    guesses_data = get_guesses(year, day)
+    guesses_data = get_guesses(year, day, session=session)
     console.print(guesses_data)
 
 
@@ -242,7 +251,10 @@ def status_cmd(
         fmt=output_format,
     )
 
-    console.print(status_data)
+    if output_format is OutputFormat.JSON:
+        typer.echo(status_data)
+    else:
+        console.print(status_data)
 
 
 @app.command("open")

@@ -5,7 +5,7 @@ Public API:
 
 - get_puzzle_input(year, day, session=None) -> str
 - submit_puzzle_answer(year, day, part, answer, session=None) -> SubmissionResult
-- get_private_leaderboard(year, session, board_id, view_key, fmt=OutputFormat.MODEL)
+- get_private_leaderboard(year, board_id, session=None, view_key=None, fmt=OutputFormat.MODEL)
 - get_user_status(year, session=None, fmt=OutputFormat.MODEL)
 
 The session token can be passed explicitly or via the AOC_SESSION environment variable.

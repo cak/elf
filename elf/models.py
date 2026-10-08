@@ -149,7 +149,7 @@ class OpenKind(str, Enum):
 
 
 class DayStatus(BaseModel):
-    day: int = Field(..., ge=1, le=31)
+    day: int = Field(..., ge=1, le=25)
     stars: int = Field(..., ge=0, le=2)
     href: str
     aria_label: str

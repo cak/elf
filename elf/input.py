@@ -1,7 +1,12 @@
 import httpx
 
 from .aoc_client import AOCClient
-from .cache import get_cache_input_file
+from .cache import (
+    get_cache_input_file,
+    get_session_cache_scope,
+    migrate_legacy_cache_file,
+    write_cache_text,
+)
 from .exceptions import InputFetchError, PuzzleLockedError
 from .utils import (
     current_aoc_year,
@@ -9,6 +14,7 @@ from .utils import (
     handle_http_errors,
     looks_like_login_page,
     resolve_session,
+    validate_event_day,
 )
 
 
@@ -29,13 +35,11 @@ def get_input(year: int, day: int, session: str | None) -> str:
         InputFetchError: If there is an issue fetching the puzzle input.
         ValueError: If the year/day are out of range.
     """
-    if not 1 <= day <= 25:
-        raise ValueError(f"Invalid day {day!r}. Advent of Code days are 1–25.")
-
-    if year < 2015:
-        raise ValueError(f"Invalid year {year!r}. Advent of Code started in 2015.")
-
-    cache_file = get_cache_input_file(year, day)
+    validate_event_day(year, day)
+    session_token = resolve_session(session)
+    scope = get_session_cache_scope(session_token)
+    cache_file = get_cache_input_file(year, day, scope)
+    migrate_legacy_cache_file(get_cache_input_file(year, day), cache_file)
     if cache_file.exists():
         return cache_file.read_text(encoding="utf-8")
 
@@ -48,8 +52,6 @@ def get_input(year: int, day: int, session: str | None) -> str:
                 now=status.now,
                 unlock_time=status.unlock_time,
             )
-
-    session_token = resolve_session(session)
 
     # --- Network layer --------------------------------------------------------
 
@@ -87,8 +89,6 @@ def get_input(year: int, day: int, session: str | None) -> str:
 
     input_data = text
 
-    # Ensure the cache directory exists
-    cache_file.parent.mkdir(parents=True, exist_ok=True)
-    cache_file.write_text(input_data, encoding="utf-8")
+    write_cache_text(cache_file, input_data)
 
     return input_data

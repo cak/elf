@@ -6,7 +6,11 @@ from html.parser import HTMLParser
 import httpx
 
 from .aoc_client import AOCClient
-from .cache import get_cache_guess_file
+from .cache import (
+    get_cache_guess_file,
+    get_session_cache_scope,
+    migrate_legacy_cache_file,
+)
 from .exceptions import PuzzleLockedError, SubmissionError
 from .messages import (
     get_already_completed_message,
@@ -22,7 +26,13 @@ from .messages import (
     get_wrong_level_message,
 )
 from .models import CachedGuessCheck, Guess, SubmissionResult, SubmissionStatus
-from .utils import current_aoc_year, get_unlock_status, read_guesses, resolve_session
+from .utils import (
+    current_aoc_year,
+    get_unlock_status,
+    read_guesses,
+    resolve_session,
+    validate_event_day,
+)
 
 WAIT_CACHE_TTL = timedelta(minutes=1)
 
@@ -111,11 +121,7 @@ def submit_answer(
     """
     submission_answer, numeric_answer = _normalize_answer(answer)
 
-    if not 1 <= day <= 25:
-        raise ValueError(f"Invalid day {day!r}. Advent of Code days are 1–25.")
-
-    if year < 2015:
-        raise ValueError(f"Invalid year {year!r}. Advent of Code started in 2015.")
+    validate_event_day(year, day)
 
     if level not in (1, 2):
         raise ValueError(f"Invalid level {level!r}. Puzzle parts are 1 or 2.")
@@ -135,7 +141,9 @@ def submit_answer(
 
     session_token = resolve_session(session)
 
-    cache_file = get_cache_guess_file(year, day)
+    scope = get_session_cache_scope(session_token)
+    cache_file = get_cache_guess_file(year, day, scope)
+    migrate_legacy_cache_file(get_cache_guess_file(year, day), cache_file)
     cache_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Check cached guesses before hitting network
@@ -146,6 +154,7 @@ def submit_answer(
             level=level,
             answer=submission_answer,
             numeric_answer=numeric_answer,
+            session_token=session_token,
         )
 
         if cached.status != SubmissionStatus.UNKNOWN:
@@ -255,7 +264,7 @@ def submit_to_aoc(
             status = SubmissionStatus.UNKNOWN
 
     # Cache the guess (including WAIT, with TTL handling on read)
-    write_guess_cache(year, day, level, answer, status)
+    write_guess_cache(year, day, level, answer, status, session_token=session_token)
 
     return SubmissionResult(
         guess=answer,
@@ -272,8 +281,10 @@ def write_guess_cache(
     part: int,
     guess: int | str,
     status: SubmissionStatus,
+    session_token: str | None = None,
 ) -> None:
-    cache_file = get_cache_guess_file(year, day)
+    scope = get_session_cache_scope(session_token) if session_token else None
+    cache_file = get_cache_guess_file(year, day, scope)
 
     timestamp = datetime.now(timezone.utc).isoformat()
 
@@ -303,8 +314,9 @@ def check_cached_guesses(
     level: int,
     answer: int | str,
     numeric_answer: int | None,
+    session_token: str | None = None,
 ) -> CachedGuessCheck:
-    guesses = read_guesses(year, day)
+    guesses = read_guesses(year, day, session_token=session_token)
     now = datetime.now(timezone.utc)
 
     highest_low: Guess | None = None
@@ -339,7 +351,9 @@ def check_cached_guesses(
 
         match g:
             # Mark that this part is completed (any previous guess)
-            case Guess(status=SubmissionStatus.COMPLETED):
+            case Guess(
+                status=SubmissionStatus.COMPLETED | SubmissionStatus.CORRECT
+            ):
                 completed_guess = g
 
             # Bounds checking (int only)

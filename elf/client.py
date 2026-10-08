@@ -23,7 +23,8 @@ def get_puzzle_input(year: int, day: int, session: str | None = None) -> str:
     year:
         The Advent of Code event year (e.g., ``2024``).
     day:
-        The puzzle day number (``1``–``25``).
+        The puzzle day number. Events through 2024 use ``1``–``25``;
+        events from 2025 onward use ``1``–``12``.
     session:
         An Advent of Code session token. If omitted, the value of the
         ``AOC_SESSION`` environment variable will be used instead.
@@ -103,6 +104,7 @@ def get_private_leaderboard(
     session: str | None = None,
     view_key: str | None = None,
     fmt: OutputFormat = OutputFormat.MODEL,
+    refresh: bool = False,
 ) -> Leaderboard | str | Table:
     """
     Retrieve a private leaderboard for a given year.
@@ -126,6 +128,8 @@ def get_private_leaderboard(
         token is optional.
     fmt:
         The desired output format (``MODEL`` | ``JSON`` | ``TABLE``).
+    refresh:
+        Bypass the local 15-minute leaderboard cache.
 
     Returns
     -------
@@ -155,7 +159,9 @@ def get_private_leaderboard(
         if view_key is None
         else session or os.getenv("AOC_SESSION")
     )
-    return get_leaderboard(year, session_token, board_id, view_key, fmt)
+    return get_leaderboard(
+        year, session_token, board_id, view_key, fmt, refresh=refresh
+    )
 
 
 def get_user_status(
